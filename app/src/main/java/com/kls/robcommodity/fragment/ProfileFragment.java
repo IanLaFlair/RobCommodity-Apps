@@ -23,6 +23,8 @@ import com.kls.robcommodity.R;
 import com.kls.robcommodity.activity.CartActivity;
 import com.kls.robcommodity.activity.ContacsUsActivity;
 import com.kls.robcommodity.activity.HistoryOrderActivity;
+import com.kls.robcommodity.activity.SigninActivity;
+import com.kls.robcommodity.model.BaseResponse;
 import com.kls.robcommodity.model.UserModel;
 import com.kls.robcommodity.model.UserResponse;
 import com.kls.robcommodity.utils.Api;
@@ -127,5 +129,43 @@ public class ProfileFragment extends Fragment {
     @OnClick(R.id.txtContactUs)
     public void contactUs(){
         startActivity(new Intent(getActivity(), ContacsUsActivity.class));
+    }
+
+    @OnClick(R.id.txtShareApp)
+    public void shareApp() {
+        //@TODO : shareApp
+    }
+
+    @OnClick(R.id.txtUpdateApp)
+    public void updateApp() {
+        //@TODO : updateApp
+    }
+
+    @OnClick(R.id.txtLogout)
+    public void logout() {
+        showLoading(true);
+        NetworkHandler.getRetrofit().create(Api.class)
+                .logOut()
+                .enqueue(new Callback<BaseResponse>() {
+                    @Override
+                    public void onResponse(Call<BaseResponse> call, Response<BaseResponse> response) {
+                        if (response.body() != null){
+                            if (response.body().isSuccess()){
+                                showLoading(false);
+                                startActivity(new Intent(getActivity(), SigninActivity.class));
+                                getActivity().finish();
+                            }else {
+                                showLoading(false);
+                                Toast.makeText(getActivity(), response.body().getMessage(), Toast.LENGTH_SHORT).show();
+                            }
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(Call<BaseResponse> call, Throwable t) {
+                        t.printStackTrace();
+                        showLoading(false);
+                    }
+                });
     }
 }

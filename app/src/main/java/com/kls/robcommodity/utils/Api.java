@@ -129,6 +129,9 @@ public interface Api {
             @Path("qty") Integer quantity
     );
 
+    @GET("logout")
+    Call<BaseResponse> logOut();
+
     @GET("latest")
     Call<ExchangeRateResponse> getExchangeRate(@Query("base") String base);
 }
