@@ -51,6 +51,7 @@ public class HomeActivity extends AppCompatActivity {
                 R.id.navigation_home, R.id.navigation_notif, R.id.navigation_profile)
                 .build();
 
+
         NavigationUI.setupWithNavController(bottomNavigationView, navController);
     }
 

@@ -3,15 +3,20 @@ package com.kls.robcommodity.activity;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.animation.Animator;
+import android.app.ActivityManager;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
+import android.util.Log;
 import android.view.WindowManager;
 import android.widget.ImageView;
 
 import com.daimajia.androidanimations.library.Techniques;
 import com.daimajia.androidanimations.library.YoYo;
 import com.kls.robcommodity.R;
+import com.kls.robcommodity.services.ExchangeRateService;
+import com.kls.robcommodity.utils.SharedPreferenceManager;
 
 import butterknife.BindView;
 
@@ -25,8 +30,17 @@ public class SplachActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_splach);
 
+        SharedPreferenceManager.getInstance().setSharedPreferences(this.getSharedPreferences(SharedPreferenceManager.NAME, Context.MODE_PRIVATE));
+
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
                 WindowManager.LayoutParams.FLAG_FULLSCREEN);
+
+        ExchangeRateService exchangeRateService = new ExchangeRateService();
+        Intent serviceIntent = new Intent(this, exchangeRateService.getClass());
+
+        if (!serviceIsRunning(exchangeRateService.getClass())){
+            startService(serviceIntent);
+        }
 
         YoYo.with(Techniques.FadeInUp)
                 .duration(100)
@@ -64,5 +78,17 @@ public class SplachActivity extends AppCompatActivity {
                 finish();
             }
         }, 2500);
+    }
+
+    private boolean serviceIsRunning(Class<? extends ExchangeRateService> aClass) {
+        ActivityManager manager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
+        for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
+            if (aClass.getName().equals(service.service.getClassName())) {
+                System.out.println("SERVICE RUNNING "+ true);
+                return true;
+            }
+        }
+        System.out.println("SERVICE RUNNING "+ false);
+        return false;
     }
 }

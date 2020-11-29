@@ -12,8 +12,8 @@ public class DetailItemModel {
     @SerializedName("description")
     String description;
 
-    @SerializedName("price")
-    Integer price;
+    @SerializedName("discount_price")
+    Double price;
 
     @SerializedName("stock")
     Integer stock;
@@ -40,11 +40,11 @@ public class DetailItemModel {
         this.description = description;
     }
 
-    public Integer getPrice() {
+    public Double getPrice() {
         return price;
     }
 
-    public void setPrice(Integer price) {
+    public void setPrice(Double price) {
         this.price = price;
     }
 

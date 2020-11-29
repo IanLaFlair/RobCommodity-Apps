@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/cart_navigation.xml"
+    app:startDestination="@+id/cart_list">
+
+    <fragment
+        android:id="@+id/cart_list"
+        android:name="com.kls.robcommodity.fragment.CartListFragment"
+        tools:layout="@layout/fragment_cart_list"/>
+
+    <fragment
+        android:id="@+id/shipment"
+        android:name="com.kls.robcommodity.fragment.ShipmentFragment"
+        tools:layout="@layout/fragment_shipment"/>
+
+    <fragment
+        android:id="@+id/change_shipment"
+        android:name="com.kls.robcommodity.fragment.ChangeShippingFragment"
+        tools:layout="@layout/fragment_change_shipping"/>
+
+    <fragment
+        android:id="@+id/add_shipment"
+        android:name="com.kls.robcommodity.fragment.AddShipmentFragment"
+        tools:layout="@layout/fragment_add_shipment">
+        <action
+            android:id="@+id/action_add_shipment_to_change_shipment"
+            app:destination="@id/change_shipment" />
+    </fragment>
+
+</navigation>

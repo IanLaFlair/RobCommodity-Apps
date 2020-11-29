@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_marginRight="16dp"
+    android:layout_marginLeft="16dp"
+    android:layout_marginBottom="8dp"
+    android:layout_marginTop="8dp"
+    app:cardElevation="3dp"
+    app:cardCornerRadius="5dp">
+
+    <LinearLayout
+        android:padding="8dp"
+        android:id="@+id/ll_cart_item"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:weightSum="2">
+
+        <ImageView
+            android:layout_gravity="center"
+            android:id="@+id/img_cart_item"
+            android:layout_width="75dp"
+            android:layout_height="75dp"
+            android:src="@drawable/tembakau"
+            android:layout_weight="0.2"
+            android:scaleType="fitCenter"/>
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1.5"
+            android:gravity="center"
+            android:paddingLeft="4dp"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/txt_title_cart_item"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Item 1"
+                android:fontFamily="@font/ubuntu_bold"
+                android:textSize="14sp"
+                android:textColor="@android:color/black"/>
+
+            <TextView
+                android:id="@+id/txt_price_cart_item"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Rp. 350.000"
+                android:textColor="@color/colorPrimary"
+                android:fontFamily="@font/ubuntu_bold"
+                android:textSize="14sp"/>
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:id="@+id/txt_qty_checkout"
+                android:textSize="14sp"
+                android:visibility="gone"
+                android:textColor="@android:color/black"
+                android:text="Total pesanan : 2"
+                android:fontFamily="@font/ubuntu_medium"/>
+
+            <EditText
+                android:id="@+id/txt_note_cart_item"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textSize="12sp"
+                android:visibility="gone"
+                android:fontFamily="@font/ubuntu_medium"
+                android:hint="Note for seller"
+                android:textColor="@android:color/darker_gray"/>
+
+            <com.travijuu.numberpicker.library.NumberPicker
+                android:layout_width="wrap_content"
+                android:layout_height="40dp"
+                android:layout_gravity="center"
+                android:id="@+id/qty_cart_item" />
+
+
+
+        </LinearLayout>
+
+        <ImageButton
+            android:background="@android:color/white"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:id="@+id/btn_delete"
+            android:layout_weight="0.3"
+            android:src="@drawable/ic_baseline_delete_24"/>
+    </LinearLayout>
+
+</androidx.cardview.widget.CardView>

@@ -14,6 +14,8 @@ import com.kls.robcommodity.model.LoginResponse;
 import com.kls.robcommodity.model.RegisterResponse;
 import com.kls.robcommodity.utils.Api;
 import com.kls.robcommodity.utils.NetworkHandler;
+import com.kls.robcommodity.utils.SharedPreferenceKey;
+import com.kls.robcommodity.utils.SharedPreferenceManager;
 import com.ontbee.legacyforks.cn.pedant.SweetAlert.SweetAlertDialog;
 
 import java.util.HashMap;
@@ -51,14 +53,20 @@ public class SigninActivity extends AppCompatActivity {
         btn_sign.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                //@TODO : unremark logintask terus remark startActivity
                 startActivity(new Intent(SigninActivity.this, HomeActivity.class));
+//                loginTask(edt_email.getText().toString(), edt_password.getText().toString());
             }
         });
     }
 
     private void loginTask(String email, String password){
         pDialog.show();
-        Api api = NetworkHandler.getRetrofit().create(Api.class);
+        Retrofit retrofit = new Retrofit.Builder()
+                .baseUrl(Api.BASE_URL)
+                .addConverterFactory(GsonConverterFactory.create())
+                .build();
+        Api api = retrofit.create(Api.class);
         Map<String, String> params = new HashMap<>();
         params.put("email",email);
         params.put("password",password);
@@ -68,13 +76,21 @@ public class SigninActivity extends AppCompatActivity {
             public void onResponse(Call<LoginResponse> call, Response<LoginResponse> response) {
                 LoginResponse loginResponse = response.body();
                 if (loginResponse != null){
+                    try(SharedPreferenceManager sp = SharedPreferenceManager.getInstance()) {
+                        sp.begin();
+                        sp.put(SharedPreferenceKey.TOKEN, loginResponse.getToken());
+                        sp.commit();
+                    }
+                    pDialog.dismiss();
+                    startActivity(new Intent(SigninActivity.this, HomeActivity.class));
 
                 }
             }
 
             @Override
             public void onFailure(Call<LoginResponse> call, Throwable t) {
-
+                t.printStackTrace();
+                pDialog.dismiss();
             }
         });
     }

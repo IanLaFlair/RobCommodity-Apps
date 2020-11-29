@@ -5,7 +5,7 @@ import android.os.Parcelable;
 
 import com.google.gson.annotations.SerializedName;
 
-public class HotItemModel  {
+public class HotItemModel implements Parcelable {
 
     @SerializedName("id")
     Integer id;
@@ -13,11 +13,40 @@ public class HotItemModel  {
     @SerializedName("title")
     String title;
 
-    @SerializedName("price")
-    Integer price;
+    @SerializedName("discount_price")
+    Double price;
 
     @SerializedName("thumbnail_list")
     ThumbnailResponse thumbnailResponse;
+
+    public HotItemModel() {
+    }
+
+    public HotItemModel(Parcel in) {
+        if (in.readByte() == 0) {
+            id = null;
+        } else {
+            id = in.readInt();
+        }
+        title = in.readString();
+        if (in.readByte() == 0) {
+            price = null;
+        } else {
+            price = in.readDouble();
+        }
+    }
+
+    public static final Creator<HotItemModel> CREATOR = new Creator<HotItemModel>() {
+        @Override
+        public HotItemModel createFromParcel(Parcel in) {
+            return new HotItemModel(in);
+        }
+
+        @Override
+        public HotItemModel[] newArray(int size) {
+            return new HotItemModel[size];
+        }
+    };
 
     public Integer getId() {
         return id;
@@ -35,11 +64,11 @@ public class HotItemModel  {
         this.title = title;
     }
 
-    public Integer getPrice() {
+    public Double getPrice() {
         return price;
     }
 
-    public void setPrice(Integer price) {
+    public void setPrice(Double price) {
         this.price = price;
     }
 
@@ -49,5 +78,27 @@ public class HotItemModel  {
 
     public void setThumbnailResponse(ThumbnailResponse thumbnailResponse) {
         this.thumbnailResponse = thumbnailResponse;
+    }
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(Parcel parcel, int i) {
+        if (id == null) {
+            parcel.writeByte((byte) 0);
+        } else {
+            parcel.writeByte((byte) 1);
+            parcel.writeInt(id);
+        }
+        parcel.writeString(title);
+        if (price == null) {
+            parcel.writeByte((byte) 0);
+        } else {
+            parcel.writeByte((byte) 1);
+            parcel.writeDouble(price);
+        }
     }
 }

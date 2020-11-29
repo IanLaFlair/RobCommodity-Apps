@@ -20,11 +20,13 @@ import com.bumptech.glide.request.transition.Transition;
 import com.kls.robcommodity.R;
 import com.kls.robcommodity.activity.DetailActivity;
 import com.kls.robcommodity.activity.DetailItemActivtiy;
+import com.kls.robcommodity.helper.Helper;
 import com.kls.robcommodity.model.CategoryModel;
 import com.kls.robcommodity.model.HotItemModel;
 
 import org.w3c.dom.Text;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 
 import butterknife.BindView;
@@ -80,7 +82,7 @@ public class HotItemAdapter extends RecyclerView.Adapter<HotItemAdapter.ViewHold
 
         void bind(HotItemModel hotItemModel){
             txt_namabar.setText(hotItemModel.getTitle());
-            txt_hargabar.setText("$"+hotItemModel.getPrice());
+            txt_hargabar.setText(Helper.formatToDollarCurrency(Helper.rupiahToDollar(hotItemModel.getPrice())));
             Glide.with(context)
                     .load(hotItemModel.getThumbnailResponse().getImage())
                     .into(new SimpleTarget<Drawable>() {

@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_marginLeft="16dp"
+    android:layout_marginRight="16dp"
+    android:layout_marginTop="8dp"
+    android:layout_marginBottom="8dp"
+    app:cardElevation="3dp"
+    app:cardCornerRadius="5dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:padding="8dp"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/txtOrderID"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textSize="16sp"
+                android:text="Order ID"
+                android:textColor="@color/black"
+                android:fontFamily="@font/sfuibold"/>
+
+            <TextView
+                android:id="@+id/txtOrderDate"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:fontFamily="@font/sfuimedium"
+                android:text="Order Date"
+                android:textSize="14sp"
+                android:textColor="@color/gray.primary"/>
+
+            <TextView
+                android:id="@+id/txtEmailOrder"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:fontFamily="@font/sfuimedium"
+                android:text="email@email.com"
+                android:textColor="@color/gray.primary"
+                android:textSize="14sp"/>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:weightSum="2"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:gravity="start"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/txtAmountDollar"
+                    android:fontFamily="@font/sfuimedium"
+                    android:textColor="@color/colorPrimary"
+                    android:textSize="14sp"
+                    android:text="$79"/>
+
+                <View
+                    android:layout_width="1dp"
+                    android:layout_height="match_parent"
+                    android:background="@color/colorPrimary"/>
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:gravity="end"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/txtAmountIDR"
+                    android:fontFamily="@font/sfuimedium"
+                    android:textColor="@color/colorPrimary"
+                    android:textSize="14sp"
+                    android:text="Rp. 792.000"/>
+
+            </LinearLayout>
+
+        </LinearLayout>
+        <LinearLayout
+            android:id="@+id/llStatusOrder"
+            android:layout_width="5dp"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:background="@color/colorPrimary"/>
+    </LinearLayout>
+
+</androidx.cardview.widget.CardView>
