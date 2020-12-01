@@ -54,8 +54,8 @@ public class SigninActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 //@TODO : unremark logintask terus remark startActivity
-                startActivity(new Intent(SigninActivity.this, HomeActivity.class));
-//                loginTask(edt_email.getText().toString(), edt_password.getText().toString());
+//                startActivity(new Intent(SigninActivity.this, HomeActivity.class));
+                loginTask(edt_email.getText().toString(), edt_password.getText().toString());
             }
         });
     }
