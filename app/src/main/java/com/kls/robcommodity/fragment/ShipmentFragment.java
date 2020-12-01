@@ -43,6 +43,7 @@ import com.kls.robcommodity.model.ShippingAddressResponse;
 import com.kls.robcommodity.model.ThumbnailResponse;
 import com.kls.robcommodity.utils.Api;
 import com.kls.robcommodity.utils.NetworkHandler;
+import com.kls.robcommodity.utils.SharedPreferenceKey;
 import com.kls.robcommodity.utils.SharedPreferenceManager;
 import com.kls.robcommodity.viewmodel.CartListViewModel;
 import com.kls.robcommodity.viewmodel.ShippingAddressViewModel;
@@ -257,7 +258,7 @@ public class ShipmentFragment extends Fragment implements TransactionFinishedCal
     @OnClick(R.id.btn_buy_cart)
     public void pay(){
         showLoading(true);
-
+        String token = SharedPreferenceManager.get(SharedPreferenceKey.TOKEN, String.class);
         if (this.cartItemResponse == null){
             for (int i = 0; i < this.noteList.size(); i++){
                 Map<String, Object> data = this.noteList.get(i);
@@ -282,7 +283,7 @@ public class ShipmentFragment extends Fragment implements TransactionFinishedCal
             }
 
             NetworkHandler.getRetrofit().create(Api.class)
-                    .postCharge("midtrans", "wqMpKxroIwT4RvcxldXZGluiwTR6vN")
+                    .postCharge("midtrans", token)
                     .enqueue(new Callback<ChargeResponse>() {
                         @Override
                         public void onResponse(Call<ChargeResponse> call, Response<ChargeResponse> response) {
@@ -301,7 +302,7 @@ public class ShipmentFragment extends Fragment implements TransactionFinishedCal
 
         }else {
             NetworkHandler.getRetrofit().create(Api.class)
-                    .postChargeNow("midtrans", "wqMpKxroIwT4RvcxldXZGluiwTR6vN",
+                    .postChargeNow("midtrans", token,
                             this.cartItemResponse.getCartItemModels().get(0).getHotItemModel().getId(),
                             this.cartItemResponse.getCartItemModels().get(0).getQuantity())
                     .enqueue(new Callback<ChargeResponse>() {
@@ -474,6 +475,7 @@ public class ShipmentFragment extends Fragment implements TransactionFinishedCal
     }
 
     private void execCompletedPayment(TransactionResult result) {
+        showLoading(true);
         TransactionResponse response = result.getResponse();
 
         System.out.println();
@@ -494,14 +496,24 @@ public class ShipmentFragment extends Fragment implements TransactionFinishedCal
         callResponse.enqueue(new Callback<BaseResponse>() {
             @Override
             public void onResponse(Call<BaseResponse> call, Response<BaseResponse> response) {
-                if (response.body().isSuccess()){
-                    getActivity().finish();
+                if (response.body() != null){
+                    if (response.body().isSuccess()){
+                        showLoading(false);
+                        getActivity().finish();
+                    }else {
+                        Toast.makeText(getActivity(), response.body().getMessage(), Toast.LENGTH_SHORT).show();
+                        showLoading(false);
+                    }
+                }else {
+                    Toast.makeText(getActivity(), "Response Null", Toast.LENGTH_SHORT).show();
+                    showLoading(false);
                 }
             }
 
             @Override
             public void onFailure(Call<BaseResponse> call, Throwable t) {
                 t.printStackTrace();
+                showLoading(false);
             }
         });
     }

@@ -3,6 +3,9 @@ package com.kls.robcommodity.utils;
 import com.google.gson.annotations.SerializedName;
 import com.kls.robcommodity.model.BaseResponse;
 import com.kls.robcommodity.model.CartItemResponse;
+import com.kls.robcommodity.model.Categories;
+import com.kls.robcommodity.model.CategoryProductResponse;
+import com.kls.robcommodity.model.CategoryResponse;
 import com.kls.robcommodity.model.ChargeResponse;
 import com.kls.robcommodity.model.DetailItemResponse;
 import com.kls.robcommodity.model.DetailTransactionHistoryResponse;
@@ -10,6 +13,7 @@ import com.kls.robcommodity.model.ExchangeRateResponse;
 import com.kls.robcommodity.model.HistoryOrderResponse;
 import com.kls.robcommodity.model.HotItemResponse;
 import com.kls.robcommodity.model.LoginResponse;
+import com.kls.robcommodity.model.ProductResult;
 import com.kls.robcommodity.model.RegisterResponse;
 import com.kls.robcommodity.model.ShippingAddressDetail;
 import com.kls.robcommodity.model.ShippingAddressModel;
@@ -45,8 +49,14 @@ public interface Api {
     @FormUrlEncoded
     Call<LoginResponse> postLogin(@FieldMap Map<String, String> params);
 
-    @GET("categories/1/products")
+    @GET("products/all/hot  ")
     Call<HotItemResponse> getHotItem();
+
+    @GET("categories")
+    Call<CategoryResponse> getCategories();
+
+    @GET("categories/{category_id}/products")
+    Call<CategoryProductResponse> getCategoryProduct(@Path("category_id") Integer categoryID);
 
     @GET("products/{id}")
     Call<DetailItemResponse> getDetail(@Path("id") Integer  id);
@@ -131,6 +141,9 @@ public interface Api {
 
     @GET("logout")
     Call<BaseResponse> logOut();
+
+    @POST("products/search")
+    Call<ProductResult> searchProduct(@Query("keyword") String keyword);
 
     @GET("latest")
     Call<ExchangeRateResponse> getExchangeRate(@Query("base") String base);

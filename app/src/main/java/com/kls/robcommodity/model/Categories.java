@@ -5,10 +5,10 @@ import com.google.gson.annotations.SerializedName;
 public class Categories{
 
 	@SerializedName("image")
-	private Object image;
+	private String image;
 
 	@SerializedName("logo")
-	private Object logo;
+	private String logo;
 
 	@SerializedName("id")
 	private int id;
@@ -16,20 +16,20 @@ public class Categories{
 	@SerializedName("category")
 	private String category;
 
-	public void setImage(Object image){
-		this.image = image;
-	}
-
-	public Object getImage(){
+	public String getImage() {
 		return image;
 	}
 
-	public void setLogo(Object logo){
-		this.logo = logo;
+	public void setImage(String image) {
+		this.image = image;
 	}
 
-	public Object getLogo(){
+	public String getLogo() {
 		return logo;
+	}
+
+	public void setLogo(String logo) {
+		this.logo = logo;
 	}
 
 	public void setId(int id){

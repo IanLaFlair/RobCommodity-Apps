@@ -132,25 +132,28 @@ public class CartListFragment extends Fragment {
             cartListViewModel.getCartItemResponse().observe(getActivity(), new Observer<CartItemResponse>() {
                 @Override
                 public void onChanged(CartItemResponse cartItemResponse) {
-                    llEmptyView.setVisibility(cartItemResponse.getCartItemModels().size() == 0 ? View.VISIBLE : View.GONE);
-                    if (cartItemResponse.getCartItemModels() != null) {
-                        cartListAdapter.setData(cartItemResponse.getCartItemModels());
-                        cartListAdapter.notifyDataSetChanged();
+                    if (cartItemResponse != null){
+                        if (cartItemResponse.getCartItemModels() != null && !cartItemResponse.getCartItemModels().isEmpty()) {
+                            cartListAdapter.setData(cartItemResponse.getCartItemModels());
+                            cartListAdapter.notifyDataSetChanged();
 
-                        grandTotal();
+                            grandTotal();
 
-                        showLoading(false);
-
-                        pb.setVisibility(View.GONE);
-                        llTotal.setVisibility(View.VISIBLE);
+                            pb.setVisibility(View.GONE);
+                            llTotal.setVisibility(View.VISIBLE);
+                            llEmptyView.setVisibility(View.GONE);
+                        }else {
+                            llEmptyView.setVisibility(View.VISIBLE);
+                        }
+                    }else {
+                        llEmptyView.setVisibility(View.VISIBLE);
                     }
+                    showLoading(false);
 
                 }
             });
 
             cartListViewModel.setCartItemData();
-
-
 
     }
 

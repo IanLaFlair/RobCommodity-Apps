@@ -1,9 +1,9 @@
-<ScrollView
+<androidx.core.widget.NestedScrollView
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content"
+    android:layout_height="match_parent"
     android:scrollbars="none"
     android:descendantFocusability="beforeDescendants"
     android:focusableInTouchMode="true"
@@ -11,7 +11,7 @@
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
-        android:layout_marginBottom="40dp"
+
         android:layout_height="match_parent">
 
         <androidx.appcompat.widget.Toolbar
@@ -39,15 +39,32 @@
                     android:textColor="#fff"
                     android:textSize="18sp" />
 
-                <EditText
+                <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:background="@drawable/bg_edt"
-                    android:drawableLeft="@drawable/ic_search_black_24dp"
-                    android:fontFamily="@font/sfuimedium"
-                    android:hint="What are you looking for ?"
-                    android:paddingStart="16dp" />
+                    android:orientation="horizontal">
+                    <EditText
+                        android:id="@+id/edtSearchHome"
+                        android:layout_weight="1"
+                        android:layout_width="0dp"
+                        android:focusableInTouchMode="false"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:background="@drawable/bg_edt"
+                        android:drawableLeft="@drawable/ic_search_black_24dp"
+                        android:fontFamily="@font/sfuimedium"
+                        android:hint="What are you looking for ?"
+                        android:paddingStart="16dp" />
+
+                    <ImageButton
+                        android:layout_marginLeft="12dp"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:id="@+id/btnCart"
+                        android:src="@drawable/ic_baseline_shopping_cart_24"
+                        android:background="@color/colorPrimary"
+                        android:layout_gravity="center"/>
+                </LinearLayout>
 
             </LinearLayout>
 
@@ -71,7 +88,6 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:clipToPadding="false"
-
             android:orientation="horizontal"
             android:paddingStart="8dp"
             android:paddingEnd="8dp"
@@ -106,6 +122,7 @@
             android:clipToPadding="false"
             android:paddingBottom="14dp"
             android:layout_height="wrap_content"
+            android:overScrollMode="never"
             app:layoutManager="androidx.recyclerview.widget.GridLayoutManager"
             app:spanCount="2"
             tools:listitem="@layout/hoti_item"
@@ -116,7 +133,4 @@
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
-
-
-
-</ScrollView>
+</androidx.core.widget.NestedScrollView>

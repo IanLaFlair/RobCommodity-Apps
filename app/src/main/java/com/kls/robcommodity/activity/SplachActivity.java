@@ -16,6 +16,7 @@ import com.daimajia.androidanimations.library.Techniques;
 import com.daimajia.androidanimations.library.YoYo;
 import com.kls.robcommodity.R;
 import com.kls.robcommodity.services.ExchangeRateService;
+import com.kls.robcommodity.utils.SharedPreferenceKey;
 import com.kls.robcommodity.utils.SharedPreferenceManager;
 
 import butterknife.BindView;
@@ -73,7 +74,12 @@ public class SplachActivity extends AppCompatActivity {
             @Override
             public void run() {
                 /* Create an Intent that will start the Menu-Activity. */
-                Intent mainIntent = new Intent(SplachActivity.this,MainActivity.class);
+                Intent mainIntent;
+                if (SharedPreferenceManager.get(SharedPreferenceKey.TOKEN, String.class) != null){
+                    mainIntent = new Intent(SplachActivity.this,HomeActivity.class);
+                }else {
+                    mainIntent = new Intent(SplachActivity.this,MainActivity.class);
+                }
                 startActivity(mainIntent);
                 finish();
             }

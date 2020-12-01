@@ -71,6 +71,7 @@
                 android:visibility="gone"
                 android:fontFamily="@font/ubuntu_medium"
                 android:hint="Note for seller"
+                android:backgroundTint="@color/black"
                 android:textColor="@android:color/darker_gray"/>
 
             <com.travijuu.numberpicker.library.NumberPicker

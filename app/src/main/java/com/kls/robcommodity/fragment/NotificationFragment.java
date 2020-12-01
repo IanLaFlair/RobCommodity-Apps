@@ -14,7 +14,7 @@ import butterknife.ButterKnife;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Toast;
+import android.widget.LinearLayout;
 
 import com.kls.robcommodity.R;
 import com.kls.robcommodity.adapter.HistoryOrderTransactionAdapter;
@@ -28,6 +28,9 @@ import java.security.PublicKey;
 public class NotificationFragment extends Fragment {
     @BindView(R.id.rvTransaction)
     public RecyclerView rvTransaction;
+
+    @BindView(R.id.emptyView)
+    public LinearLayout llEmptyView;
 
     private SweetAlertDialog pDialog;
     private HistoryOrderTransactionAdapter historyOrderTransactionAdapter;
@@ -65,6 +68,7 @@ public class NotificationFragment extends Fragment {
         historyOrderTransactionAdapter = new HistoryOrderTransactionAdapter(getActivity());
         rvTransaction.setAdapter(historyOrderTransactionAdapter);
         historyOrderTransactionAdapter.notifyDataSetChanged();
+
         loadData();
 
         rvTransaction.setHasFixedSize(true);
@@ -74,21 +78,30 @@ public class NotificationFragment extends Fragment {
 
     private void loadData() {
         transactionViewModel = new ViewModelProvider(this, new ViewModelProvider.NewInstanceFactory()).get(TransactionViewModel.class);
+
         transactionViewModel.getUserTransaction().observe(this, new Observer<HistoryOrderResponse>() {
             @Override
             public void onChanged(HistoryOrderResponse historyOrderResponse) {
                 if (historyOrderResponse != null){
-                    historyOrderTransactionAdapter.setHistoryOrderModels(historyOrderResponse.getData());
-                    historyOrderTransactionAdapter.notifyDataSetChanged();
-                    showLoading(false);
-                }else{
-                    showLoading(false);
-                    Toast.makeText(getActivity(), "Kosong", Toast.LENGTH_SHORT).show();
+                    if (historyOrderResponse.getData() != null && !historyOrderResponse.getData().isEmpty()){
+                        historyOrderTransactionAdapter.setHistoryOrderModels(historyOrderResponse.getData());
+                        historyOrderTransactionAdapter.notifyDataSetChanged();
+                        llEmptyView.setVisibility(View.GONE);
+                    }else {
+                        llEmptyView.setVisibility(View.VISIBLE);
+                    }
+                }else {
+                    llEmptyView.setVisibility(View.VISIBLE);
                 }
+
+                showLoading(false);
+
             }
         });
+
         transactionViewModel.setTransactionData();
     }
+
     private void showLoading(boolean state) {
         if (state){
             pDialog.show();

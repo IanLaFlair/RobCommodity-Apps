@@ -1,5 +1,6 @@
 package com.kls.robcommodity.fragment;
 
+import android.content.Intent;
 import android.content.res.TypedArray;
 import android.graphics.Color;
 import android.os.Bundle;
@@ -15,13 +16,21 @@ import androidx.recyclerview.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.EditText;
+import android.widget.ImageButton;
+import android.widget.Toast;
 
 import com.kls.robcommodity.R;
+import com.kls.robcommodity.activity.CartActivity;
+import com.kls.robcommodity.activity.DetailActivity;
 import com.kls.robcommodity.activity.HomeActivity;
 import com.kls.robcommodity.adapter.CategoryAdapter;
 import com.kls.robcommodity.adapter.HotItemAdapter;
+import com.kls.robcommodity.model.Categories;
 import com.kls.robcommodity.model.CategoryModel;
+import com.kls.robcommodity.model.CategoryResponse;
 import com.kls.robcommodity.model.HotItemModel;
+import com.kls.robcommodity.utils.Api;
 import com.kls.robcommodity.viewmodel.HotItemViewModel;
 import com.ontbee.legacyforks.cn.pedant.SweetAlert.SweetAlertDialog;
 
@@ -29,6 +38,13 @@ import java.util.ArrayList;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import butterknife.OnClick;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+import retrofit2.Retrofit;
+import retrofit2.Retrofit.Builder;
+import retrofit2.converter.gson.GsonConverterFactory;
 
 public class FragmentHome extends Fragment {
 
@@ -44,11 +60,16 @@ public class FragmentHome extends Fragment {
     RecyclerView rv_cat;
     @BindView(R.id.rv_hoti)
     RecyclerView rv_hoti;
-    private ArrayList<CategoryModel> list = new ArrayList<>();
+    @BindView(R.id.btnCart)
+    ImageButton btnCart;
+    @BindView(R.id.edtSearchHome)
+    EditText edtSearch;
+    private ArrayList<Categories> list = new ArrayList<>();
     private ArrayList<HotItemModel> listHot = new ArrayList<>();
 
     HotItemViewModel hotItemViewModel;
     HotItemAdapter hotItemAdapter;
+    CategoryAdapter listHeroAdapter;
     SweetAlertDialog pDialog;
 
 
@@ -101,6 +122,12 @@ public class FragmentHome extends Fragment {
         rv_hoti.setAdapter(hotItemAdapter);
         hotItemAdapter.notifyDataSetChanged();
 
+        rv_cat.setLayoutManager(new LinearLayoutManager(getActivity(), LinearLayoutManager.HORIZONTAL, false));
+        listHeroAdapter = new CategoryAdapter(getActivity());
+        rv_cat.setAdapter(listHeroAdapter);
+
+        getListCat();
+
         hotItemViewModel = new ViewModelProvider(this, new ViewModelProvider.NewInstanceFactory()).get(HotItemViewModel.class);
         hotItemViewModel.getHotItemModel().observe(getActivity(), new Observer<ArrayList<HotItemModel>>() {
             @Override
@@ -109,7 +136,7 @@ public class FragmentHome extends Fragment {
                     hotItemAdapter.setData(hotItemModels);
                     showLoading(false);
                 }else {
-
+                    showLoading(false);
                 }
             }
         });
@@ -117,30 +144,44 @@ public class FragmentHome extends Fragment {
 
         rv_cat.setHasFixedSize(true);
 
-        list.addAll(getListCat());
-        showRecyclerList();
-
         return view;
 
 
     }
-    public ArrayList<CategoryModel> getListCat() {
-        String[] dataName = getResources().getStringArray(R.array.data_name);
-        TypedArray dataPhoto = getResources().obtainTypedArray(R.array.data_photo);
-        ArrayList<CategoryModel> listCat = new ArrayList<>();
-        for (int i = 0; i < dataName.length; i++) {
-            CategoryModel categoryModel = new CategoryModel();
-            categoryModel.setName(dataName[i]);
-            categoryModel.setIcon(dataPhoto.getResourceId(i,0));
-            listCat.add(categoryModel);
-        }
-        return listCat;
+
+    @OnClick(R.id.edtSearchHome)
+    public void search() {
+        startActivity(new Intent(getActivity(), DetailActivity.class));
     }
 
-    private void showRecyclerList(){
-        rv_cat.setLayoutManager(new LinearLayoutManager(getActivity(), LinearLayoutManager.HORIZONTAL, false));
-        CategoryAdapter listHeroAdapter = new CategoryAdapter(getActivity(),list);
-        rv_cat.setAdapter(listHeroAdapter);
+    public void getListCat() {
+        Retrofit retrofit = new Retrofit.Builder()
+                .baseUrl(Api.BASE_URL)
+                .addConverterFactory(GsonConverterFactory.create())
+                .build();
+
+        retrofit.create(Api.class)
+                .getCategories()
+                .enqueue(new Callback<CategoryResponse>() {
+                    @Override
+                    public void onResponse(Call<CategoryResponse> call, Response<CategoryResponse> response) {
+                        CategoryResponse categoryResponse = response.body();
+                        if (categoryResponse != null){
+                            if (categoryResponse.getCategories() != null && !categoryResponse.getCategories().isEmpty()){
+                                listHeroAdapter.setCategoryModels(categoryResponse.getCategories());
+                            }else {
+                                Toast.makeText(getActivity(), "Css", Toast.LENGTH_SHORT).show();
+                            }
+                        }else {
+                            Toast.makeText(getActivity(), "category null", Toast.LENGTH_SHORT).show();
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(Call<CategoryResponse> call, Throwable t) {
+                        t.printStackTrace();
+                    }
+                });
     }
 
     private void showLoading(Boolean state) {
@@ -149,6 +190,11 @@ public class FragmentHome extends Fragment {
         } else {
             pDialog.dismiss();
         }
+    }
+
+    @OnClick(R.id.btnCart)
+    public void toCart() {
+        startActivity(new Intent(getActivity(), CartActivity.class));
     }
 
 }

@@ -132,11 +132,18 @@ public class ChangeShippingFragment extends Fragment {
             selected.add(model.getSelected());
         }
 
-        if (selected.contains(1)){
-            txtHelpShipment.setVisibility(View.GONE);
+        if (!selected.isEmpty()) {
+            txtHelpShipment.setText("note : Click to set your shipment address");
+            if (selected.contains(1)){
+                txtHelpShipment.setVisibility(View.GONE);
+            }else {
+                txtHelpShipment.setVisibility(View.VISIBLE);
+            }
         }else {
+            txtHelpShipment.setText("note : Click button \"+\" to set your shipment address");
             txtHelpShipment.setVisibility(View.VISIBLE);
         }
+
     }
 
     public void itemOnClick(ShippingAddressModel shippingAddressModel) {
@@ -146,13 +153,23 @@ public class ChangeShippingFragment extends Fragment {
                 .enqueue(new Callback<BaseResponse>() {
                     @Override
                     public void onResponse(Call<BaseResponse> call, Response<BaseResponse> response) {
-                        shippingAddressViewModel.setShippingAddress();
-                        shippingAddressAdapter.notifyDataSetChanged();
+                        BaseResponse baseResponse = response.body();
+                        if (baseResponse != null){
+                            if (baseResponse.isSuccess()){
+                                shippingAddressViewModel.setShippingAddress();
+                                shippingAddressAdapter.notifyDataSetChanged();
+
+                                navController.popBackStack();
+                            }else {
+                                Toast.makeText(getActivity(), baseResponse.getMessage(), Toast.LENGTH_SHORT).show();
+                            }
+                        }
                         showLoading(false);
                     }
 
                     @Override
                     public void onFailure(Call<BaseResponse> call, Throwable t) {
+                        t.printStackTrace();
                         showLoading(false);
                     }
                 });
