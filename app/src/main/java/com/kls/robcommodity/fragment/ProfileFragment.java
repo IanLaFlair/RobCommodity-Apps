@@ -1,6 +1,8 @@
 package com.kls.robcommodity.fragment;
 
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
@@ -38,6 +40,7 @@ public class ProfileFragment extends Fragment {
     public TextView txtProfileName;
     @BindView(R.id.emailProfile)
     public TextView txtEmailProfile;
+    SharedPreferences.Editor editor;
 
     private SweetAlertDialog pDialog;
 
@@ -58,6 +61,9 @@ public class ProfileFragment extends Fragment {
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_profile, container, false);
         ButterKnife.bind(this, view);
+        SharedPreferences sharedpreferences = getActivity().getSharedPreferences("Rob Commodity", Context.MODE_PRIVATE);
+         editor = sharedpreferences.edit();
+
 
         this.pDialog = new SweetAlertDialog(getActivity(), SweetAlertDialog.PROGRESS_TYPE);
         this.pDialog.getProgressHelper().setBarColor(Color.parseColor("#A5DC86"));
@@ -143,29 +149,9 @@ public class ProfileFragment extends Fragment {
 
     @OnClick(R.id.txtLogout)
     public void logout() {
-        showLoading(true);
-        NetworkHandler.getRetrofit().create(Api.class)
-                .logOut()
-                .enqueue(new Callback<BaseResponse>() {
-                    @Override
-                    public void onResponse(Call<BaseResponse> call, Response<BaseResponse> response) {
-                        if (response.body() != null){
-                            if (response.body().isSuccess()){
-                                showLoading(false);
-                                startActivity(new Intent(getActivity(), SigninActivity.class));
-                                getActivity().finish();
-                            }else {
-                                showLoading(false);
-                                Toast.makeText(getActivity(), response.body().getMessage(), Toast.LENGTH_SHORT).show();
-                            }
-                        }
-                    }
-
-                    @Override
-                    public void onFailure(Call<BaseResponse> call, Throwable t) {
-                        t.printStackTrace();
-                        showLoading(false);
-                    }
-                });
+        editor.clear();
+        editor.apply();
+        startActivity(new Intent(getActivity(), SigninActivity.class));
+        getActivity().finish();
     }
 }

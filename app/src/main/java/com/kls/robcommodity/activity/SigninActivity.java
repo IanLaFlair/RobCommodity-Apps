@@ -83,7 +83,7 @@ public class SigninActivity extends AppCompatActivity {
                     }
                     pDialog.dismiss();
                     startActivity(new Intent(SigninActivity.this, HomeActivity.class));
-
+                    finish();
                 }
             }
 
