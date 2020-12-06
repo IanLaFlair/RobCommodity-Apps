@@ -24,17 +24,32 @@ import com.google.android.material.bottomsheet.BottomSheetBehavior;
 import com.kls.robcommodity.R;
 import com.kls.robcommodity.adapter.CartListAdapter;
 import com.kls.robcommodity.adapter.ItemDetailTransactionAdapter;
+import com.kls.robcommodity.constant.Constant;
 import com.kls.robcommodity.helper.Helper;
 import com.kls.robcommodity.model.BaseResponse;
+import com.kls.robcommodity.model.ChargeResponse;
 import com.kls.robcommodity.model.DetailTransactionHistoryResponse;
 import com.kls.robcommodity.utils.Api;
 import com.kls.robcommodity.utils.NetworkHandler;
+import com.kls.robcommodity.utils.SharedPreferenceKey;
+import com.kls.robcommodity.utils.SharedPreferenceManager;
+import com.midtrans.sdk.corekit.callback.TransactionFinishedCallback;
+import com.midtrans.sdk.corekit.core.MidtransSDK;
+import com.midtrans.sdk.corekit.core.PaymentMethod;
+import com.midtrans.sdk.corekit.core.TransactionRequest;
+import com.midtrans.sdk.corekit.core.themes.CustomColorTheme;
+import com.midtrans.sdk.corekit.models.CustomerDetails;
+import com.midtrans.sdk.corekit.models.ShippingAddress;
+import com.midtrans.sdk.corekit.models.TransactionResponse;
+import com.midtrans.sdk.corekit.models.snap.TransactionResult;
+import com.midtrans.sdk.uikit.SdkUIFlowBuilder;
 import com.ontbee.legacyforks.cn.pedant.SweetAlert.SweetAlertDialog;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-public class DetailTransactionOrder extends AppCompatActivity {
+public class DetailTransactionOrder extends AppCompatActivity implements TransactionFinishedCallback {
     @BindView(R.id.rvItemOrder)
     public RecyclerView rvItemOrder;
     @BindView(R.id.txtTsCode)
@@ -47,6 +62,8 @@ public class DetailTransactionOrder extends AppCompatActivity {
     public TextView txtPaymentStatus;
     @BindView(R.id.txtTotalTsDetail)
     public TextView txtTotalDetail;
+    @BindView(R.id.txtTsStatus)
+    public TextView txtTsStatus;
     @BindView(R.id.llDetailTs)
     public LinearLayout llDetailTs;
     @BindView(R.id.btnTsPay)
@@ -74,7 +91,7 @@ public class DetailTransactionOrder extends AppCompatActivity {
         pDialog.setCancelable(true);
         showLoading(true);
 
-        btnTsPay.setVisibility(View.INVISIBLE); //Kalo dipake dirubah aja
+        initPayment();
 
         rvItemOrder.setLayoutManager(new LinearLayoutManager(this, RecyclerView.VERTICAL, false));
         itemDetailTransactionAdapter = new ItemDetailTransactionAdapter(this);
@@ -88,6 +105,21 @@ public class DetailTransactionOrder extends AppCompatActivity {
         }
         setUpBottomSheet();
         rvItemOrder.setHasFixedSize(true);
+    }
+
+    private void initPayment() {
+        SdkUIFlowBuilder.init()
+                .setContext(this)
+                .setMerchantBaseUrl(Api.BASE_URL)
+                .setClientKey(Constant.CLIENT_KEY)
+                .setTransactionFinishedCallback(this)
+                .enableLog(true)
+                .setColorTheme(new CustomColorTheme(
+                        "#DF0000",
+                        "#D00303",
+                        "#03DAC5"
+                ))
+                .buildSDK();
     }
 
     private void setUpBottomSheet() {
@@ -111,17 +143,88 @@ public class DetailTransactionOrder extends AppCompatActivity {
     public void cancelTransaction() {
         if (!edtCancelNote.getText().toString().equals("")){
             this.cancelPayment(detailTransactionHistoryResponse.getHistoryOrderModel().getPaymentToken(),
-                    edtCancelNote.getText().toString());
+                    edtCancelNote.getText().toString(), false);
         }else {
             Toast.makeText(this, "Cancel note cant be empty", Toast.LENGTH_SHORT).show();
         }
     }
 
-    private void cancelPayment(String token, String cancelNote) {
+    @OnClick(R.id.btnTsPay)
+    public void pay() {
+        String token = SharedPreferenceManager.get(SharedPreferenceKey.TOKEN, String.class);
+        if (token != null) {
+
+            MidtransSDK.getInstance().setTransactionRequest(transactionRequest());
+            System.out.println("NEW TOKEN = "+ detailTransactionHistoryResponse.getHistoryOrderModel().getPaymentToken());
+            MidtransSDK.getInstance().startPaymentUiFlow(DetailTransactionOrder.this, detailTransactionHistoryResponse.getHistoryOrderModel().getPaymentToken());
+//            NetworkHandler.getRetrofit().create(Api.class)
+//                    .postCharge("midtrans", token)
+//                    .enqueue(new Callback<ChargeResponse>() {
+//                        @Override
+//                        public void onResponse(Call<ChargeResponse> call, Response<ChargeResponse> response) {
+//                            ChargeResponse chargeResponse = response.body();
+//                            if (chargeResponse != null) {
+//                                if (!chargeResponse.isSuccess() && chargeResponse.getStatus() == 200) {
+////
+//
+//
+//                                } else {
+//                                    Toast.makeText(DetailTransactionOrder.this, chargeResponse.getMessage(), Toast.LENGTH_SHORT).show();
+//                                }
+//                            } else {
+//                                try {
+//                                    System.out.println(response.errorBody().string() + "\n token" + MidtransSDK.getInstance().getTransaction().getToken());
+//                                    Toast.makeText(DetailTransactionOrder.this, "Please complete transaction first, check in your transaction", Toast.LENGTH_SHORT).show();
+//                                } catch (IOException e) {
+//                                    e.printStackTrace();
+//                                }
+//                            }
+//                        }
+//
+//                        @Override
+//                        public void onFailure(Call<ChargeResponse> call, Throwable t) {
+//                            t.printStackTrace();
+//                        }
+//                    });
+        }
+    }
+
+    private TransactionRequest transactionRequest() {
+        TransactionRequest request = new TransactionRequest("ORDER-"+String.valueOf(System.currentTimeMillis()), 1000);
+
+        request.setCustomerDetails(customerDetails());
+        
+        return request;
+    }
+
+    private CustomerDetails customerDetails() {
+        CustomerDetails cd = new CustomerDetails();
+        cd.setFirstName("NAMAMU");
+        cd.setLastName("YourName");
+        cd.setEmail("email@gmail.com");
+        cd.setPhone("Nope");
+
+        ShippingAddress shippingAddress = new ShippingAddress();
+        shippingAddress.setAddress("ssss");
+        shippingAddress.setCity("dada");
+        shippingAddress.setCountryCode("2432");
+        shippingAddress.setFirstName("jl");
+        shippingAddress.setLastName("kot");
+        shippingAddress.setPostalCode("12313");
+        shippingAddress.setPhone("328498");
+
+        cd.setShippingAddress(shippingAddress);
+        return cd;
+    }
+
+    private void cancelPayment(String token, String cancelNote, boolean fromPayment) {
         showLoading(true);
         Map<String, Object> map = new HashMap<>();
-        map.put("cancellation_note", cancelNote);
-
+        if (fromPayment){
+            map.put("cancellation_note", " ");
+        }else {
+            map.put("cancellation_note", cancelNote);
+        }
         NetworkHandler.getRetrofit().create(Api.class)
                 .postCancelTransaction(token, map)
                 .enqueue(new Callback<BaseResponse>() {
@@ -132,12 +235,23 @@ public class DetailTransactionOrder extends AppCompatActivity {
                                 showLoading(false);
                                 bs.setState(BottomSheetBehavior.STATE_COLLAPSED);
                                 Toast.makeText(DetailTransactionOrder.this, "Transaction Cancel", Toast.LENGTH_SHORT).show();
-                                recreate();
+                                if (fromPayment){
+                                    DetailTransactionOrder.this.finish();
+                                }else {
+                                    recreate();
+                                }
 
                             }else {
                                 showLoading(false);
                                 bs.setState(BottomSheetBehavior.STATE_COLLAPSED);
                                 Toast.makeText(DetailTransactionOrder.this, response.body().getMessage(), Toast.LENGTH_SHORT).show();
+                            }
+                        }else {
+                            showLoading(false);
+                            try {
+                                System.out.println(response.errorBody().string());
+                            } catch (IOException e) {
+                                e.printStackTrace();
                             }
                         }
                     }
@@ -163,15 +277,29 @@ public class DetailTransactionOrder extends AppCompatActivity {
                                 itemDetailTransactionAdapter.setTransactionItems(detailTransactionHistoryResponse.getTransactionItem());
                                 itemDetailTransactionAdapter.notifyDataSetChanged();
                             }
+
+                            txtTsStatus.setText("Transaction Status : \n"+ detailTransactionHistoryResponse.getHistoryOrderModel().getStatus().toUpperCase());
+
                             txtTransactionCode.setText("Transaction Code : \n" + detailTransactionHistoryResponse.getHistoryOrderModel().getOrderId());
-                            txtPaymentCode.setText("Payment Code : \n"+ detailTransactionHistoryResponse.getTransactionPayment().get(0).getPaymentCode());
+                            if (!detailTransactionHistoryResponse.getTransactionPayment().isEmpty()){
+                                txtPaymentCode.setText("Payment Code : \n"+ detailTransactionHistoryResponse.getTransactionPayment().get(0).getPaymentCode());
+                            } else {
+                                txtPaymentCode.setText("Payment Code : \n -");
+                            }
                             txtDetailOrderDate.setText("Order Date : \n" + detailTransactionHistoryResponse.getHistoryOrderModel().getOrderDate());
                             txtPaymentStatus.setText("Payment Status : \n" +detailTransactionHistoryResponse.getHistoryOrderModel().getPaymentStatus());
                             txtTotalDetail.setText("Total : \n" + Helper.formatToDollarCurrency(Helper.rupiahToDollar(Double.valueOf(detailTransactionHistoryResponse.getHistoryOrderModel().getGrandTotal()))));
-                            if (detailTransactionHistoryResponse.getHistoryOrderModel().getStatus().equals("paid")){
+
+
+                            if (detailTransactionHistoryResponse.getHistoryOrderModel().getStatus().equals("created")){
+                                btnTsPay.setVisibility(View.VISIBLE);
                                 btnCancel.setVisibility(View.VISIBLE);
+                            }else if (detailTransactionHistoryResponse.getHistoryOrderModel().getStatus().equals("paid")){
+                                btnCancel.setVisibility(View.VISIBLE);
+                                btnTsPay.setVisibility(View.INVISIBLE);
                             }else {
                                 btnCancel.setVisibility(View.INVISIBLE);
+                                btnTsPay.setVisibility(View.INVISIBLE);
                             }
 
                             showLoading(false);
@@ -196,5 +324,87 @@ public class DetailTransactionOrder extends AppCompatActivity {
             llDetailTs.setVisibility(View.VISIBLE);
             pDialog.dismiss();
         }
+    }
+
+    @Override
+    public void onTransactionFinished(TransactionResult result) {
+        if(result.getResponse() != null){
+            switch (result.getStatus()){
+                case TransactionResult.STATUS_SUCCESS:
+                    Toast.makeText(this, "Transaction Sukses " + result.getResponse().getTransactionId(), Toast.LENGTH_LONG).show();
+
+                    execCompletedPayment(result);
+                    break;
+                case TransactionResult.STATUS_PENDING:
+                    Toast.makeText(this, "Transaction Pending " + result.getResponse().getTransactionId(), Toast.LENGTH_LONG).show();
+
+//                    cancelPayment(MidtransSDK.getInstance().getTransaction().getToken());
+                    break;
+                case TransactionResult.STATUS_FAILED:
+                    Toast.makeText(this, "Transaction Failed" + result.getResponse().getTransactionId(), Toast.LENGTH_LONG).show();
+
+//                    cancelPayment(MidtransSDK.getInstance().getTransaction().getToken());
+                    break;
+            }
+            result.getResponse().getValidationMessages();
+        }else if(result.isTransactionCanceled()){
+            Toast.makeText(this, "Transaction Failed", Toast.LENGTH_LONG).show();
+
+            cancelPayment(MidtransSDK.getInstance().getTransaction().getToken(), "", true);
+        }else{
+            if(result.getStatus().equalsIgnoreCase((TransactionResult.STATUS_INVALID))){
+                Toast.makeText(this, "Transaction Invalid" + result.getResponse().getTransactionId(), Toast.LENGTH_LONG).show();
+//                cancelPayment(MidtransSDK.getInstance().getTransaction().getToken());
+//                getActivity().finish();
+            }else{
+                Toast.makeText(this, "Something Wrong", Toast.LENGTH_LONG).show();
+//                cancelPayment(MidtransSDK.getInstance().getTransaction().getToken());
+//                getActivity().finish();
+            }
+        }
+    }
+
+    private void execCompletedPayment(TransactionResult result) {
+        showLoading(true);
+        TransactionResponse response = result.getResponse();
+
+        System.out.println();
+
+        Api api = NetworkHandler.getRetrofit().create(Api.class);
+
+        Call<BaseResponse> callResponse =  api.getSuccessMidtransResponse(response.getOrderId(), response.getStatusCode(), response.getTransactionStatus());;
+
+//        if (this.cartItemResponse != null){
+//            callResponse = api.getSuccessMidtransResponse(
+//                    response.getOrderId(), response.getStatusCode(), response.getTransactionStatus(),
+//                    this.cartItemResponse.getCartItemModels().get(0).getQuantity(), this.cartItemResponse.getCartItemModels().get(0).getNote(),
+//                    this.cartItemResponse.getCartItemModels().get(0).getHotItemModel().getId());
+//        }else {
+//        }
+
+
+        callResponse.enqueue(new Callback<BaseResponse>() {
+            @Override
+            public void onResponse(Call<BaseResponse> call, Response<BaseResponse> response) {
+                if (response.body() != null){
+                    if (response.body().isSuccess()){
+                        showLoading(false);
+                        finish();
+                    }else {
+                        Toast.makeText(DetailTransactionOrder.this, response.body().getMessage(), Toast.LENGTH_SHORT).show();
+                        showLoading(false);
+                    }
+                }else {
+                    Toast.makeText(DetailTransactionOrder.this, "Response Null", Toast.LENGTH_SHORT).show();
+                    showLoading(false);
+                }
+            }
+
+            @Override
+            public void onFailure(Call<BaseResponse> call, Throwable t) {
+                t.printStackTrace();
+                showLoading(false);
+            }
+        });
     }
 }

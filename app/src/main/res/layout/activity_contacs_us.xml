@@ -20,7 +20,7 @@
             android:text="Contact US"
             android:gravity="center"
             android:textColor="@android:color/white"
-            android:textSize="24sp"
+            android:textSize="22sp"
             android:paddingRight="14dp"
             android:fontFamily="@font/sfuibold"/>
     </androidx.appcompat.widget.Toolbar>

@@ -14,6 +14,8 @@ import android.widget.Toast;
 import com.kls.robcommodity.R;
 import com.kls.robcommodity.model.RegisterResponse;
 import com.kls.robcommodity.utils.Api;
+import com.kls.robcommodity.utils.SharedPreferenceKey;
+import com.kls.robcommodity.utils.SharedPreferenceManager;
 import com.ontbee.legacyforks.cn.pedant.SweetAlert.SweetAlertDialog;
 
 import java.util.HashMap;
@@ -80,7 +82,12 @@ public class SignupActivity extends AppCompatActivity {
                     Integer status = registerResponse.getStatus();
                     String message = registerResponse.getMessage();
                     if (status == 201){
-                        startActivity(new Intent(SignupActivity.this, HomeActivity.class));
+//                        try(SharedPreferenceManager sp = SharedPreferenceManager.getInstance()) {
+//                            sp.begin();
+//                            sp.put(SharedPreferenceKey.TOKEN, registerResponse.getToken());
+//                            sp.commit();
+//                        }
+                        startActivity(new Intent(SignupActivity.this, SigninActivity.class));
                     }else {
                         Toast.makeText(SignupActivity.this, "Register Gagal "+message, Toast.LENGTH_SHORT).show();
                     }

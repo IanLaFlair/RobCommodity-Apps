@@ -3,15 +3,14 @@
     xmlns:tools="http://schemas.android.com/tools"
     package="com.kls.robcommodity">
 
-    <uses-permission android:name="android.permission.INTERNET" />
-
     <application
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".activity.ContacsUsActivity"></activity>
+        <activity android:name=".activity.EditProfileActivity" />
+        <activity android:name=".activity.ContacsUsActivity" />
         <activity android:name=".activity.DetailTransactionOrder" />
         <activity android:name=".activity.HistoryOrderActivity" />
         <activity android:name=".activity.CartActivity" />
@@ -41,7 +40,8 @@
             android:enabled="true"
             android:exported="true" />
     </application>
-
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
 
 </manifest>

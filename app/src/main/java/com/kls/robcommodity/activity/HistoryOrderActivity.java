@@ -15,6 +15,8 @@ import butterknife.ButterKnife;
 
 import android.graphics.Color;
 import android.os.Bundle;
+import android.view.View;
+import android.widget.LinearLayout;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.circularreveal.CircularRevealWidget;
@@ -30,6 +32,8 @@ public class HistoryOrderActivity extends AppCompatActivity {
     public RecyclerView rvHistoryOrder;
     @BindView(R.id.toolbar)
     public Toolbar toolbar;
+    @BindView(R.id.emptyView)
+    public LinearLayout llEmptyView;
 
     private HistoryOrderTransactionAdapter historyOrderTransactionAdapter;
     private SweetAlertDialog pDialog;
@@ -62,11 +66,19 @@ public class HistoryOrderActivity extends AppCompatActivity {
         historyOrderViewModel.getHistoryOrderResponse().observe(this, new Observer<HistoryOrderResponse>() {
             @Override
             public void onChanged(HistoryOrderResponse historyOrderResponse) {
-                if (historyOrderResponse.getData() != null && !historyOrderResponse.getData().isEmpty()){
-                    historyOrderTransactionAdapter.setHistoryOrderModels(historyOrderResponse.getData());
-                    historyOrderTransactionAdapter.notifyDataSetChanged();
-                    showLoading(false);
+                if (historyOrderResponse != null){
+                    if (historyOrderResponse.getData() != null && !historyOrderResponse.getData().isEmpty()){
+                        historyOrderTransactionAdapter.setHistoryOrderModels(historyOrderResponse.getData());
+                        historyOrderTransactionAdapter.notifyDataSetChanged();
+                        llEmptyView.setVisibility(View.GONE);
+                    }else {
+                        llEmptyView.setVisibility(View.VISIBLE);
+                    }
+                }else {
+                    llEmptyView.setVisibility(View.VISIBLE);
                 }
+                showLoading(false);
+
             }
         });
 

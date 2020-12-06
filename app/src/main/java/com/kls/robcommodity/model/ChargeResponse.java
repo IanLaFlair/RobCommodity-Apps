@@ -2,27 +2,16 @@ package com.kls.robcommodity.model;
 
 import com.google.gson.annotations.SerializedName;
 
-public class ChargeResponse {
+public class ChargeResponse extends BaseResponse{
 
-	@SerializedName("redirect_url")
-	private String redirectUrl;
+	@SerializedName("data")
+	ChargeModel chargeModel;
 
-	@SerializedName("token")
-	private String token;
-
-	public void setRedirectUrl(String redirectUrl){
-		this.redirectUrl = redirectUrl;
+	public ChargeModel getChargeModel() {
+		return chargeModel;
 	}
 
-	public String getRedirectUrl(){
-		return redirectUrl;
-	}
-
-	public void setToken(String token){
-		this.token = token;
-	}
-
-	public String getToken(){
-		return token;
+	public void setChargeModel(ChargeModel chargeModel) {
+		this.chargeModel = chargeModel;
 	}
 }

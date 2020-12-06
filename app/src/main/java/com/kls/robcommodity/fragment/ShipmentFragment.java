@@ -1,10 +1,10 @@
 package com.kls.robcommodity.fragment;
 
 import android.content.Context;
-import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
 
+import androidx.cardview.widget.CardView;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
@@ -24,11 +24,11 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.kls.robcommodity.R;
-import com.kls.robcommodity.activity.HomeActivity;
 import com.kls.robcommodity.adapter.CartListAdapter;
 import com.kls.robcommodity.constant.Constant;
 import com.kls.robcommodity.helper.Helper;
@@ -48,27 +48,17 @@ import com.kls.robcommodity.utils.SharedPreferenceManager;
 import com.kls.robcommodity.viewmodel.CartListViewModel;
 import com.kls.robcommodity.viewmodel.ShippingAddressViewModel;
 import com.midtrans.sdk.corekit.callback.TransactionFinishedCallback;
-import com.midtrans.sdk.corekit.callback.TransactionOptionsCallback;
-import com.midtrans.sdk.corekit.core.LocalDataHandler;
 import com.midtrans.sdk.corekit.core.MidtransSDK;
 import com.midtrans.sdk.corekit.core.PaymentMethod;
 import com.midtrans.sdk.corekit.core.TransactionRequest;
 import com.midtrans.sdk.corekit.core.themes.CustomColorTheme;
-import com.midtrans.sdk.corekit.models.CustomerDetails;
-import com.midtrans.sdk.corekit.models.ItemDetails;
-import com.midtrans.sdk.corekit.models.PaymentMethodsModel;
 import com.midtrans.sdk.corekit.models.TransactionResponse;
-import com.midtrans.sdk.corekit.models.snap.Authentication;
-import com.midtrans.sdk.corekit.models.snap.CreditCard;
-import com.midtrans.sdk.corekit.models.snap.Transaction;
 import com.midtrans.sdk.corekit.models.snap.TransactionResult;
 import com.midtrans.sdk.uikit.SdkUIFlowBuilder;
 import com.ontbee.legacyforks.cn.pedant.SweetAlert.SweetAlertDialog;
 
-import java.io.File;
-import java.math.BigDecimal;
+import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -86,6 +76,10 @@ public class ShipmentFragment extends Fragment implements TransactionFinishedCal
     TextView txtRecipientName;
     @BindView(R.id.txt_shipment_address)
     TextView txtShipmentAddress;
+    @BindView(R.id.svParent)
+    ScrollView svParent;
+    @BindView(R.id.cvParent)
+    CardView cvParent;
 
     private CartListAdapter cartListAdapter;
     private CartListViewModel cartListViewModel;
@@ -94,6 +88,7 @@ public class ShipmentFragment extends Fragment implements TransactionFinishedCal
     private CountDownTimer countDownTimer;
     private ArrayList<Map<String, Object>> noteList = new ArrayList<>();
     private ArrayList<ShippingAddressModel> shippingAddressModels = new ArrayList<>();
+    private ArrayList<Integer> selected;
     private NavController navController;
 
     private CartItemResponse cartItemResponse;
@@ -218,7 +213,7 @@ public class ShipmentFragment extends Fragment implements TransactionFinishedCal
 
     private void setAddress(ArrayList<ShippingAddressModel> shippingAddressModels) {
 
-        ArrayList<Integer> selected = new ArrayList<>();
+        selected = new ArrayList<>();
 
         for (ShippingAddressModel shippingAddressModel : shippingAddressModels){
 
@@ -259,70 +254,98 @@ public class ShipmentFragment extends Fragment implements TransactionFinishedCal
     public void pay(){
         showLoading(true);
         String token = SharedPreferenceManager.get(SharedPreferenceKey.TOKEN, String.class);
-        if (this.cartItemResponse == null){
-            for (int i = 0; i < this.noteList.size(); i++){
-                Map<String, Object> data = this.noteList.get(i);
-                Integer itemId = (Integer) data.get("item_id");
-                String note = (String) data.get("note");
+        if (selected.contains(1)){
+            if (this.cartItemResponse == null){
+                for (int i = 0; i < this.noteList.size(); i++){
+                    Map<String, Object> data = this.noteList.get(i);
+                    Integer itemId = (Integer) data.get("item_id");
+                    String note = (String) data.get("note");
 
-                System.out.println("POSITION : "+ i + ", ITEM_ID : "+ itemId +", NOTE : "+note);
+                    System.out.println("POSITION : "+ i + ", ITEM_ID : "+ itemId +", NOTE : "+note);
+
+                    NetworkHandler.getRetrofit().create(Api.class)
+                            .postNoteOrder(itemId, note)
+                            .enqueue(new Callback<BaseResponse>() {
+                                @Override
+                                public void onResponse(Call<BaseResponse> call, Response<BaseResponse> response) {
+                                    System.out.println("SET NOTE : " + response.body().isSuccess());
+                                }
+
+                                @Override
+                                public void onFailure(Call<BaseResponse> call, Throwable t) {
+                                    t.printStackTrace();
+                                }
+                            });
+                }
 
                 NetworkHandler.getRetrofit().create(Api.class)
-                        .postNoteOrder(itemId, note)
-                        .enqueue(new Callback<BaseResponse>() {
+                        .postCharge("midtrans", token)
+                        .enqueue(new Callback<ChargeResponse>() {
                             @Override
-                            public void onResponse(Call<BaseResponse> call, Response<BaseResponse> response) {
-                                System.out.println("SET NOTE : " + response.body().isSuccess());
+                            public void onResponse(Call<ChargeResponse> call, Response<ChargeResponse> response) {
+                                ChargeResponse chargeResponse = response.body();
+                                if (chargeResponse != null){
+                                    if (chargeResponse.isSuccess()){
+                                        MidtransSDK.getInstance().setTransactionRequest(transactionRequest());
+                                        MidtransSDK.getInstance().startPaymentUiFlow(getActivity(), PaymentMethod.CREDIT_CARD, chargeResponse.getChargeModel().getToken());
+
+//                                    startWebView(chargeResponse.getChargeModel());
+
+                                    }else {
+                                        Toast.makeText(getActivity(), chargeResponse.getMessage(), Toast.LENGTH_SHORT).show();
+                                    }
+                                }else {
+                                    try {
+                                        System.out.println(response.errorBody().string() + "\n token" + MidtransSDK.getInstance().getTransaction().getToken());
+                                        Toast.makeText(getActivity(), "Please complete transaction first, check in your transaction" , Toast.LENGTH_SHORT).show();
+                                    } catch (IOException e) {
+                                        e.printStackTrace();
+                                    }
+                                }
                             }
 
                             @Override
-                            public void onFailure(Call<BaseResponse> call, Throwable t) {
+                            public void onFailure(Call<ChargeResponse> call, Throwable t) {
+                                t.printStackTrace();
+                            }
+                        });
+
+            }else {
+                NetworkHandler.getRetrofit().create(Api.class)
+                        .postChargeNow("midtrans", token,
+                                this.cartItemResponse.getCartItemModels().get(0).getHotItemModel().getId(),
+                                this.cartItemResponse.getCartItemModels().get(0).getQuantity())
+                        .enqueue(new Callback<ChargeResponse>() {
+                            @Override
+                            public void onResponse(Call<ChargeResponse> call, Response<ChargeResponse> response) {
+                                ChargeResponse chargeResponse = response.body();
+                                if (chargeResponse != null){
+                                    if (chargeResponse.isSuccess()){
+                                        MidtransSDK.getInstance().setTransactionRequest(transactionRequest());
+                                        MidtransSDK.getInstance().startPaymentUiFlow(getActivity(), PaymentMethod.CREDIT_CARD, chargeResponse.getChargeModel().getToken());
+//                                    startWebView(chargeResponse.getChargeModel());
+                                    }else {
+                                        Toast.makeText(getActivity(), chargeResponse.getMessage(), Toast.LENGTH_SHORT).show();
+                                    }
+                                }else {
+                                    try {
+                                        System.out.println(response.errorBody().string());
+                                        Toast.makeText(getActivity(), "Please complete transaction first, check in your transaction", Toast.LENGTH_SHORT).show();
+                                    } catch (IOException e) {
+                                        e.printStackTrace();
+                                    }
+                                }
+                            }
+
+                            @Override
+                            public void onFailure(Call<ChargeResponse> call, Throwable t) {
                                 t.printStackTrace();
                             }
                         });
             }
-
-            NetworkHandler.getRetrofit().create(Api.class)
-                    .postCharge("midtrans", token)
-                    .enqueue(new Callback<ChargeResponse>() {
-                        @Override
-                        public void onResponse(Call<ChargeResponse> call, Response<ChargeResponse> response) {
-                            if (response.body() != null){
-                                MidtransSDK.getInstance().setTransactionRequest(transactionRequest());
-
-                                MidtransSDK.getInstance().startPaymentUiFlow(getActivity(), PaymentMethod.CREDIT_CARD, response.body().getToken());
-                            }
-                        }
-
-                        @Override
-                        public void onFailure(Call<ChargeResponse> call, Throwable t) {
-                            t.printStackTrace();
-                        }
-                    });
-
-        }else {
-            NetworkHandler.getRetrofit().create(Api.class)
-                    .postChargeNow("midtrans", token,
-                            this.cartItemResponse.getCartItemModels().get(0).getHotItemModel().getId(),
-                            this.cartItemResponse.getCartItemModels().get(0).getQuantity())
-                    .enqueue(new Callback<ChargeResponse>() {
-                        @Override
-                        public void onResponse(Call<ChargeResponse> call, Response<ChargeResponse> response) {
-                            if (response.body() != null){
-                                MidtransSDK.getInstance().setTransactionRequest(transactionRequest());
-
-                                MidtransSDK.getInstance().startPaymentUiFlow(getActivity(), PaymentMethod.CREDIT_CARD, response.body().getToken());
-                            }
-                        }
-
-                        @Override
-                        public void onFailure(Call<ChargeResponse> call, Throwable t) {
-                            t.printStackTrace();
-                        }
-                    });
+        } else {
+            Toast.makeText(getActivity(), "Please select shipment address", Toast.LENGTH_SHORT).show();
         }
-
-
 
         showLoading(false);
     }
@@ -334,16 +357,6 @@ public class ShipmentFragment extends Fragment implements TransactionFinishedCal
     }
 
     private void initPayment(boolean bundle) {
-//        String baseUrl;
-//        if (bundle){
-//            baseUrl = Constant.MERCHAN_BASE_URL_MIDTRANS_BUY_NOW + "wqMpKxroIwT4RvcxldXZGluiwTR6vN/now/" //token ntar ganti diambil dari sharedpreferences
-//                    + this.cartItemResponse.getCartItemModels().get(0).getHotItemModel().getId()
-//                    +"/" +this.cartItemResponse.getCartItemModels().get(0).getQuantity()+"/";
-//        }else {
-//            baseUrl = Constant.MERCHANT_BASE_URL_MIDTRANS +"wqMpKxroIwT4RvcxldXZGluiwTR6vN/";
-//        }
-
-
         SdkUIFlowBuilder.init()
                 .setContext(getActivity())
                 .setMerchantBaseUrl(Api.BASE_URL)
@@ -426,11 +439,13 @@ public class ShipmentFragment extends Fragment implements TransactionFinishedCal
                 case TransactionResult.STATUS_PENDING:
                     Toast.makeText(getActivity(), "Transaction Pending " + result.getResponse().getTransactionId(), Toast.LENGTH_LONG).show();
 
+                    cancelPayment(MidtransSDK.getInstance().getTransaction().getToken());
                     break;
                 case TransactionResult.STATUS_FAILED:
                     Toast.makeText(getActivity(), "Transaction Failed" + result.getResponse().getTransactionId(), Toast.LENGTH_LONG).show();
 
                     cancelPayment(MidtransSDK.getInstance().getTransaction().getToken());
+//                    cancelPayment(MidtransSDK.getInstance().getTransaction().getToken());
                     break;
             }
             result.getResponse().getValidationMessages();
@@ -441,9 +456,11 @@ public class ShipmentFragment extends Fragment implements TransactionFinishedCal
         }else{
             if(result.getStatus().equalsIgnoreCase((TransactionResult.STATUS_INVALID))){
                 Toast.makeText(getActivity(), "Transaction Invalid" + result.getResponse().getTransactionId(), Toast.LENGTH_LONG).show();
+//                cancelPayment(MidtransSDK.getInstance().getTransaction().getToken());
                 getActivity().finish();
             }else{
                 Toast.makeText(getActivity(), "Something Wrong", Toast.LENGTH_LONG).show();
+//                cancelPayment(MidtransSDK.getInstance().getTransaction().getToken());
                 getActivity().finish();
             }
         }

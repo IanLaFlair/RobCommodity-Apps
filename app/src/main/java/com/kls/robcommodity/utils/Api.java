@@ -24,6 +24,8 @@ import java.io.File;
 import java.util.Map;
 
 import androidx.annotation.Nullable;
+import okhttp3.MultipartBody;
+import okhttp3.RequestBody;
 import okhttp3.ResponseBody;
 import retrofit2.Call;
 import retrofit2.http.Body;
@@ -32,8 +34,10 @@ import retrofit2.http.FormUrlEncoded;
 import retrofit2.http.GET;
 import retrofit2.http.Header;
 import retrofit2.http.Headers;
+import retrofit2.http.Multipart;
 import retrofit2.http.PATCH;
 import retrofit2.http.POST;
+import retrofit2.http.Part;
 import retrofit2.http.Path;
 import retrofit2.http.Query;
 
@@ -101,9 +105,9 @@ public interface Api {
             @Query("order_id") String orderID,
             @Query("status_code") String statusCode,
             @Query("transaction_status") String transactionStatus,
-            @Query("qty") Integer quantity,
-            @Query("note") String note,
-            @Query("product_id") Integer productID
+            @Nullable @Query("qty") Integer quantity,
+            @Nullable @Query("note") String note,
+            @Nullable @Query("product_id") Integer productID
     );
 
     @GET("shipping/address/{shipment_id}/delete")
@@ -112,7 +116,7 @@ public interface Api {
     @GET("shipping/address/{id}")
     Call<ShippingAddressDetail> getShippingAddressDetail(@Path("id") Integer shipmentID);
 
-    @GET("user-by-token")
+    @GET("profile/my")
     Call<UserResponse> getUser();
 
     @GET("transactions/completed/user")
@@ -141,6 +145,21 @@ public interface Api {
 
     @GET("logout")
     Call<BaseResponse> logOut();
+
+    @Multipart
+    @POST("profile/update")
+    Call<BaseResponse> updateProfile(
+            @Part("username") RequestBody username,
+            @Part("no_telp") RequestBody numberPhone,
+            @Part MultipartBody.Part photo
+    );
+
+    @Multipart
+    @POST("profile/update")
+    Call<BaseResponse> updateProfile(
+            @Part("username") RequestBody username,
+            @Part("no_telp") RequestBody numberPhone
+    );
 
     @POST("products/search")
     Call<ProductResult> searchProduct(@Query("keyword") String keyword);

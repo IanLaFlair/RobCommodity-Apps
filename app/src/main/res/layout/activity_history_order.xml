@@ -24,6 +24,8 @@
             android:fontFamily="@font/sfuibold"/>
     </androidx.appcompat.widget.Toolbar>
 
+    <include layout="@layout/empty_layout" />
+
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rvHistoryOrder"
         android:layout_width="match_parent"

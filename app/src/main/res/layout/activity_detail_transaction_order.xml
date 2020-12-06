@@ -53,6 +53,15 @@
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:id="@+id/txtTsStatus"
+                android:fontFamily="@font/sfuimedium"
+                android:text="Transaction Status :\n SUCCESS"
+                android:textColor="@color/black"
+                android:textSize="16sp"/>
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
                 android:id="@+id/txtTsCode"
                 android:fontFamily="@font/sfuimedium"
                 android:text="Transaction Code :\n PAY/12370094/XI/XVI/0004"
@@ -107,6 +116,8 @@
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:layout_marginTop="8dp"
+            android:layout_marginLeft="16dp"
+            android:layout_marginRight="16dp"
             android:weightSum="3">
 
             <Button
