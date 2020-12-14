@@ -59,6 +59,7 @@ dependencies {
 //    implementation 'com.midtrans:uikit:1.21.2-SANDBOX'
 //    sandboxImplementation 'com.midtrans:uikit:1.21.2-SANDBOX'
     annotationProcessor 'com.github.bumptech.glide:compiler:+'
+    implementation 'com.squareup.okhttp3:logging-interceptor:4.2.1'
 
     implementation 'com.midtrans:uikit:1.24.1-SANDBOX'
     implementation 'com.github.travijuu:numberpicker:1.0.7'

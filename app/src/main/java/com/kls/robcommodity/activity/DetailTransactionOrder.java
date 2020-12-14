@@ -17,6 +17,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -37,6 +38,7 @@ import com.midtrans.sdk.corekit.callback.TransactionFinishedCallback;
 import com.midtrans.sdk.corekit.core.MidtransSDK;
 import com.midtrans.sdk.corekit.core.PaymentMethod;
 import com.midtrans.sdk.corekit.core.TransactionRequest;
+import com.midtrans.sdk.corekit.core.UIKitCustomSetting;
 import com.midtrans.sdk.corekit.core.themes.CustomColorTheme;
 import com.midtrans.sdk.corekit.models.CustomerDetails;
 import com.midtrans.sdk.corekit.models.ShippingAddress;
@@ -65,7 +67,7 @@ public class DetailTransactionOrder extends AppCompatActivity implements Transac
     @BindView(R.id.txtTsStatus)
     public TextView txtTsStatus;
     @BindView(R.id.llDetailTs)
-    public LinearLayout llDetailTs;
+    public RelativeLayout llDetailTs;
     @BindView(R.id.btnTsPay)
     public Button btnTsPay;
     @BindView(R.id.btnDetailTsCancel)
@@ -114,11 +116,11 @@ public class DetailTransactionOrder extends AppCompatActivity implements Transac
                 .setClientKey(Constant.CLIENT_KEY)
                 .setTransactionFinishedCallback(this)
                 .enableLog(true)
-                .setColorTheme(new CustomColorTheme(
-                        "#DF0000",
-                        "#D00303",
-                        "#03DAC5"
-                ))
+//                .setColorTheme(new CustomColorTheme(
+//                        "#DF0000",
+//                        "#D00303",
+//                        "#03DAC5"
+//                ))
                 .buildSDK();
     }
 
@@ -141,7 +143,7 @@ public class DetailTransactionOrder extends AppCompatActivity implements Transac
 
     @OnClick({R.id.btnSendCancel})
     public void cancelTransaction() {
-        if (!edtCancelNote.getText().toString().equals("")){
+        if (!edtCancelNote.getText().toString().isEmpty()){
             this.cancelPayment(detailTransactionHistoryResponse.getHistoryOrderModel().getPaymentToken(),
                     edtCancelNote.getText().toString(), false);
         }else {
@@ -153,6 +155,10 @@ public class DetailTransactionOrder extends AppCompatActivity implements Transac
     public void pay() {
         String token = SharedPreferenceManager.get(SharedPreferenceKey.TOKEN, String.class);
         if (token != null) {
+
+            UIKitCustomSetting setting = MidtransSDK.getInstance().getUIKitCustomSetting();
+            setting.setSkipCustomerDetailsPages(true);
+            MidtransSDK.getInstance().setUIKitCustomSetting(setting);
 
             MidtransSDK.getInstance().setTransactionRequest(transactionRequest());
             System.out.println("NEW TOKEN = "+ detailTransactionHistoryResponse.getHistoryOrderModel().getPaymentToken());

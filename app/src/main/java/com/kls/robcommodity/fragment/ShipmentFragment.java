@@ -1,6 +1,7 @@
 package com.kls.robcommodity.fragment;
 
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
 
@@ -29,6 +30,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.kls.robcommodity.R;
+import com.kls.robcommodity.activity.HomeActivity;
 import com.kls.robcommodity.adapter.CartListAdapter;
 import com.kls.robcommodity.constant.Constant;
 import com.kls.robcommodity.helper.Helper;
@@ -51,6 +53,7 @@ import com.midtrans.sdk.corekit.callback.TransactionFinishedCallback;
 import com.midtrans.sdk.corekit.core.MidtransSDK;
 import com.midtrans.sdk.corekit.core.PaymentMethod;
 import com.midtrans.sdk.corekit.core.TransactionRequest;
+import com.midtrans.sdk.corekit.core.UIKitCustomSetting;
 import com.midtrans.sdk.corekit.core.themes.CustomColorTheme;
 import com.midtrans.sdk.corekit.models.TransactionResponse;
 import com.midtrans.sdk.corekit.models.snap.TransactionResult;
@@ -286,6 +289,10 @@ public class ShipmentFragment extends Fragment implements TransactionFinishedCal
                                 ChargeResponse chargeResponse = response.body();
                                 if (chargeResponse != null){
                                     if (chargeResponse.isSuccess()){
+                                        UIKitCustomSetting setting = MidtransSDK.getInstance().getUIKitCustomSetting();
+                                        setting.setSkipCustomerDetailsPages(true);
+                                        MidtransSDK.getInstance().setUIKitCustomSetting(setting);
+
                                         MidtransSDK.getInstance().setTransactionRequest(transactionRequest());
                                         MidtransSDK.getInstance().startPaymentUiFlow(getActivity(), PaymentMethod.CREDIT_CARD, chargeResponse.getChargeModel().getToken());
 
@@ -321,6 +328,10 @@ public class ShipmentFragment extends Fragment implements TransactionFinishedCal
                                 ChargeResponse chargeResponse = response.body();
                                 if (chargeResponse != null){
                                     if (chargeResponse.isSuccess()){
+                                        UIKitCustomSetting setting = MidtransSDK.getInstance().getUIKitCustomSetting();
+                                        setting.setSkipCustomerDetailsPages(true);
+                                        MidtransSDK.getInstance().setUIKitCustomSetting(setting);
+
                                         MidtransSDK.getInstance().setTransactionRequest(transactionRequest());
                                         MidtransSDK.getInstance().startPaymentUiFlow(getActivity(), PaymentMethod.CREDIT_CARD, chargeResponse.getChargeModel().getToken());
 //                                    startWebView(chargeResponse.getChargeModel());
@@ -363,11 +374,11 @@ public class ShipmentFragment extends Fragment implements TransactionFinishedCal
                 .setClientKey(Constant.CLIENT_KEY)
                 .setTransactionFinishedCallback(this)
                 .enableLog(true)
-                .setColorTheme(new CustomColorTheme(
-                        "#DF0000",
-                        "#D00303",
-                        "#03DAC5"
-                ))
+//                .setColorTheme(new CustomColorTheme(
+//                        "#DF0000",
+//                        "#D00303",
+//                        "#03DAC5"
+//                ))
                 .buildSDK();
     }
 
@@ -516,7 +527,11 @@ public class ShipmentFragment extends Fragment implements TransactionFinishedCal
                 if (response.body() != null){
                     if (response.body().isSuccess()){
                         showLoading(false);
-                        getActivity().finish();
+
+                        Intent intent = new Intent(getActivity(), HomeActivity.class);
+                        intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                        startActivity(intent);
+
                     }else {
                         Toast.makeText(getActivity(), response.body().getMessage(), Toast.LENGTH_SHORT).show();
                         showLoading(false);

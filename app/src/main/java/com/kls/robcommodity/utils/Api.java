@@ -100,7 +100,7 @@ public interface Api {
             @Query("transaction_status") String transactionStatus
     );
 
-    @GET("payment/completed/midtrans")
+    @GET("payment/completed/now/midtrans")
     Call<BaseResponse> getSuccessMidtransResponse(
             @Query("order_id") String orderID,
             @Query("status_code") String statusCode,
@@ -166,4 +166,7 @@ public interface Api {
 
     @GET("latest")
     Call<ExchangeRateResponse> getExchangeRate(@Query("base") String base);
+
+    @GET("dollar/latest")
+    Call<Double> getExchangeCurrency();
 }
