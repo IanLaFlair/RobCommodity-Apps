@@ -8,6 +8,7 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.Toast;
 
 import com.kls.robcommodity.R;
 import com.kls.robcommodity.model.LoginResponse;
@@ -18,6 +19,7 @@ import com.kls.robcommodity.utils.SharedPreferenceKey;
 import com.kls.robcommodity.utils.SharedPreferenceManager;
 import com.ontbee.legacyforks.cn.pedant.SweetAlert.SweetAlertDialog;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -76,14 +78,27 @@ public class SigninActivity extends AppCompatActivity {
             public void onResponse(Call<LoginResponse> call, Response<LoginResponse> response) {
                 LoginResponse loginResponse = response.body();
                 if (loginResponse != null){
-                    try(SharedPreferenceManager sp = SharedPreferenceManager.getInstance()) {
-                        sp.begin();
-                        sp.put(SharedPreferenceKey.TOKEN, loginResponse.getToken());
-                        sp.commit();
+                    if (loginResponse.getToken() != null){
+                        try(SharedPreferenceManager sp = SharedPreferenceManager.getInstance()) {
+                            sp.begin();
+                            sp.put(SharedPreferenceKey.TOKEN, loginResponse.getToken());
+                            sp.commit();
+                        }
+                        pDialog.dismiss();
+                        startActivity(new Intent(SigninActivity.this, HomeActivity.class));
+                        finish();
+                    }else {
+                        Toast.makeText(SigninActivity.this, "Check email or password", Toast.LENGTH_SHORT).show();
+                    }
+                }else {
+                    try {
+                        System.out.println("Error login => "+response.errorBody().string());
+                        Toast.makeText(SigninActivity.this, "Email or password wrong", Toast.LENGTH_SHORT).show();
+                    } catch (IOException e) {
+                        e.printStackTrace();
                     }
                     pDialog.dismiss();
-                    startActivity(new Intent(SigninActivity.this, HomeActivity.class));
-                    finish();
+
                 }
             }
 

@@ -291,6 +291,8 @@ public class ShipmentFragment extends Fragment implements TransactionFinishedCal
                                     if (chargeResponse.isSuccess()){
                                         UIKitCustomSetting setting = MidtransSDK.getInstance().getUIKitCustomSetting();
                                         setting.setSkipCustomerDetailsPages(true);
+                                        showLoading(false);
+
                                         MidtransSDK.getInstance().setUIKitCustomSetting(setting);
 
                                         MidtransSDK.getInstance().setTransactionRequest(transactionRequest());
@@ -299,6 +301,8 @@ public class ShipmentFragment extends Fragment implements TransactionFinishedCal
 //                                    startWebView(chargeResponse.getChargeModel());
 
                                     }else {
+                                        showLoading(false);
+
                                         Toast.makeText(getActivity(), chargeResponse.getMessage(), Toast.LENGTH_SHORT).show();
                                     }
                                 }else {
@@ -308,12 +312,16 @@ public class ShipmentFragment extends Fragment implements TransactionFinishedCal
                                     } catch (IOException e) {
                                         e.printStackTrace();
                                     }
+                                    showLoading(false);
+
                                 }
                             }
 
                             @Override
                             public void onFailure(Call<ChargeResponse> call, Throwable t) {
                                 t.printStackTrace();
+                                showLoading(false);
+
                             }
                         });
 
@@ -330,12 +338,16 @@ public class ShipmentFragment extends Fragment implements TransactionFinishedCal
                                     if (chargeResponse.isSuccess()){
                                         UIKitCustomSetting setting = MidtransSDK.getInstance().getUIKitCustomSetting();
                                         setting.setSkipCustomerDetailsPages(true);
+                                        showLoading(false);
+
                                         MidtransSDK.getInstance().setUIKitCustomSetting(setting);
 
                                         MidtransSDK.getInstance().setTransactionRequest(transactionRequest());
                                         MidtransSDK.getInstance().startPaymentUiFlow(getActivity(), PaymentMethod.CREDIT_CARD, chargeResponse.getChargeModel().getToken());
 //                                    startWebView(chargeResponse.getChargeModel());
                                     }else {
+                                        showLoading(false);
+
                                         Toast.makeText(getActivity(), chargeResponse.getMessage(), Toast.LENGTH_SHORT).show();
                                     }
                                 }else {
@@ -345,20 +357,25 @@ public class ShipmentFragment extends Fragment implements TransactionFinishedCal
                                     } catch (IOException e) {
                                         e.printStackTrace();
                                     }
+                                    showLoading(false);
+
                                 }
                             }
 
                             @Override
                             public void onFailure(Call<ChargeResponse> call, Throwable t) {
                                 t.printStackTrace();
+                                showLoading(false);
+
                             }
                         });
             }
         } else {
             Toast.makeText(getActivity(), "Please select shipment address", Toast.LENGTH_SHORT).show();
+            showLoading(false);
+
         }
 
-        showLoading(false);
     }
 
     private TransactionRequest transactionRequest() {

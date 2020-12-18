@@ -111,6 +111,16 @@
                         android:layout_marginTop="8dp"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
+                        android:id="@+id/txtReceiptNumber"
+                        android:fontFamily="@font/sfuimedium"
+                        android:text="Receipt Number :\n 12312989"
+                        android:textColor="@color/black"
+                        android:textSize="16sp"/>
+
+                    <TextView
+                        android:layout_marginTop="8dp"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
                         android:id="@+id/txtTotalTsDetail"
                         android:fontFamily="@font/sfuimedium"
                         android:text="Total :\n $999999"

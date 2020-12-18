@@ -64,6 +64,8 @@ public class DetailTransactionOrder extends AppCompatActivity implements Transac
     public TextView txtPaymentStatus;
     @BindView(R.id.txtTotalTsDetail)
     public TextView txtTotalDetail;
+    @BindView(R.id.txtReceiptNumber)
+    public TextView txtReceiptNumber;
     @BindView(R.id.txtTsStatus)
     public TextView txtTsStatus;
     @BindView(R.id.llDetailTs)
@@ -294,6 +296,15 @@ public class DetailTransactionOrder extends AppCompatActivity implements Transac
                             }
                             txtDetailOrderDate.setText("Order Date : \n" + detailTransactionHistoryResponse.getHistoryOrderModel().getOrderDate());
                             txtPaymentStatus.setText("Payment Status : \n" +detailTransactionHistoryResponse.getHistoryOrderModel().getPaymentStatus());
+
+                            if (detailTransactionHistoryResponse.getDeliveredTransactions() != null && detailTransactionHistoryResponse.getDeliveredTransactions().getReceiptNumber() != null){
+                                txtReceiptNumber.setText("Receipt Number : \n" + detailTransactionHistoryResponse.getDeliveredTransactions().getReceiptNumber());
+                            }else if (detailTransactionHistoryResponse.getHistoryOrderModel().getStatus().equals("cancelled")){
+                                txtReceiptNumber.setText("Receipt Number : \n" + detailTransactionHistoryResponse.getHistoryOrderModel().getStatus().toUpperCase());
+                            }else {
+                                txtReceiptNumber.setText("Receipt Number : \nON PROGRESS");
+                            }
+
                             txtTotalDetail.setText("Total : \n" + Helper.formatToDollarCurrency(Helper.rupiahToDollar(Double.valueOf(detailTransactionHistoryResponse.getHistoryOrderModel().getGrandTotal()))));
 
 
