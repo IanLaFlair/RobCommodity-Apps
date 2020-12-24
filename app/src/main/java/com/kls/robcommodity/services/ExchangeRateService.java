@@ -72,32 +72,36 @@ public class ExchangeRateService extends Service {
 
         //call api exchangeRate
         Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl(Api.BASE_URL)
+                .baseUrl("https://api.exchangeratesapi.io/")
                 .addConverterFactory(GsonConverterFactory.create())
                 .build();
 
         retrofit.create(Api.class)
-                .getExchangeCurrency()
-                .enqueue(new Callback<Double>() {
+                .getExchangeRate("USD")
+                .enqueue(new Callback<ExchangeRateResponse>() {
                     @Override
-                    public void onResponse(Call<Double> call, Response<Double> response) {
-                        Double currency = response.body();
-                        if (currency != null){
-                            try(SharedPreferenceManager sp = SharedPreferenceManager.getInstance()) {
-                                sp.begin();
-                                sp.put(SharedPreferenceKey.IDR, currency.longValue());
-                                sp.commit();
+                    public void onResponse(Call<ExchangeRateResponse> call, Response<ExchangeRateResponse> response) {
+                        if (response.body() != null){
+                            Double currency = response.body().getExchangeRate().getIdr();
+                            if (currency != null){
+                                try(SharedPreferenceManager sp = SharedPreferenceManager.getInstance()) {
+                                    sp.begin();
+                                    sp.put(SharedPreferenceKey.IDR, currency.longValue());
+                                    sp.commit();
+                                }
+                                System.out.println("Response IDR" + SharedPreferenceManager.get(SharedPreferenceKey.IDR, Long.class, 0L));
+                            }else {
+                                System.out.println("Exchange rate response null");
                             }
-                            System.out.println("Response IDR" + SharedPreferenceManager.get(SharedPreferenceKey.IDR, Long.class, 0L));
                         }else {
-                            System.out.println("Exchange rate response null");
+                            System.out.println("Response rate response null");
                         }
                     }
 
                     @Override
-                    public void onFailure(Call<Double> call, Throwable t) {
+                    public void onFailure(Call<ExchangeRateResponse> call, Throwable t) {
                         t.printStackTrace();
-                        t.getCause();
+                        System.out.println("ONFAILURE HIT");
                     }
                 });
 
