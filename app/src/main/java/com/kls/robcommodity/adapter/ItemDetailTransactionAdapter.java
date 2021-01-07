@@ -1,6 +1,7 @@
 package com.kls.robcommodity.adapter;
 
 import android.annotation.SuppressLint;
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.view.LayoutInflater;
@@ -8,10 +9,12 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
 import com.kls.robcommodity.R;
 import com.kls.robcommodity.activity.DetailItemActivtiy;
+import com.kls.robcommodity.activity.ReviewActivity;
 import com.kls.robcommodity.helper.Helper;
 import com.kls.robcommodity.model.TransactionItem;
 
@@ -87,10 +90,14 @@ public class ItemDetailTransactionAdapter extends RecyclerView.Adapter<ItemDetai
             itemView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    Intent i = new Intent(context, DetailItemActivtiy.class);
-                    i.putExtra("ID", transactionItems.get(getAdapterPosition()).getProductId());
-
-                    context.startActivity(i);
+                    if (((Activity) context) instanceof ReviewActivity){
+                        ReviewActivity reviewActivity = (ReviewActivity) context;
+                        reviewActivity.doReview(transactionItems.get(getAdapterPosition()).getId());
+                    }else {
+                        Intent i = new Intent(context, DetailItemActivtiy.class);
+                        i.putExtra("ID", transactionItems.get(getAdapterPosition()).getProductId());
+                        context.startActivity(i);
+                    }
                 }
             });
         }

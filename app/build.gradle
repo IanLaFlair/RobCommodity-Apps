@@ -61,7 +61,10 @@ dependencies {
     annotationProcessor 'com.github.bumptech.glide:compiler:+'
     implementation 'com.squareup.okhttp3:logging-interceptor:4.2.1'
 
+    implementation 'com.paypal.sdk:paypal-android-sdk:2.15.3'
+
     implementation 'com.midtrans:uikit:1.24.1-SANDBOX'
     implementation 'com.github.travijuu:numberpicker:1.0.7'
+    implementation 'com.github.sujithkanna:smileyrating:2.0.0'
 
 }

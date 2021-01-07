@@ -167,6 +167,25 @@ public interface Api {
     @GET("latest")
     Call<ExchangeRateResponse> getExchangeRate(@Query("base") String base);
 
+    @POST("payment/paypal/{token}/charge")
+    Call<BaseResponse> successPaypal(@Path("token") String token, @Query("paypalId") String paypalID);
+
+    @POST("payment/paypal/{token}/now/{product_id}/{qty}/charge")
+    Call<BaseResponse> successPaypal(
+            @Path("token") String token,
+            @Path("product_id") Integer productID,
+            @Path("qty") Integer qty,
+            @Query("paypalId") String paypalID);
+
+    @GET("shipping/transactions/{transaction_id}/arrived")
+    Call<BaseResponse> completeShipment(
+      @Path("transaction_id") Integer transactionID
+    );
+
+    @POST("products/{transaction_item_id}/review")
+    @FormUrlEncoded
+    Call<BaseResponse> reviewProduct(@Path("transaction_item_id") Integer itemID, @FieldMap Map<String, Object> data);
+
     @GET("dollar/latest")
     Call<Double> getExchangeCurrency();
 }

@@ -11,6 +11,7 @@ import retrofit2.Callback;
 import retrofit2.Response;
 
 import android.annotation.SuppressLint;
+import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.view.View;
@@ -22,6 +23,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.material.bottomsheet.BottomSheetBehavior;
+import com.google.gson.Gson;
 import com.kls.robcommodity.R;
 import com.kls.robcommodity.adapter.CartListAdapter;
 import com.kls.robcommodity.adapter.ItemDetailTransactionAdapter;
@@ -68,12 +70,16 @@ public class DetailTransactionOrder extends AppCompatActivity implements Transac
     public TextView txtReceiptNumber;
     @BindView(R.id.txtTsStatus)
     public TextView txtTsStatus;
+    @BindView(R.id.txtPaymentType)
+    public  TextView txtPaymentType;
     @BindView(R.id.llDetailTs)
     public RelativeLayout llDetailTs;
     @BindView(R.id.btnTsPay)
     public Button btnTsPay;
     @BindView(R.id.btnDetailTsCancel)
     public Button btnCancel;
+    @BindView(R.id.btnTsCompleted)
+    public Button btnCompleted;
     @BindView(R.id.edtCancelNote)
     public EditText edtCancelNote;
 
@@ -118,11 +124,6 @@ public class DetailTransactionOrder extends AppCompatActivity implements Transac
                 .setClientKey(Constant.CLIENT_KEY)
                 .setTransactionFinishedCallback(this)
                 .enableLog(true)
-//                .setColorTheme(new CustomColorTheme(
-//                        "#DF0000",
-//                        "#D00303",
-//                        "#03DAC5"
-//                ))
                 .buildSDK();
     }
 
@@ -153,6 +154,39 @@ public class DetailTransactionOrder extends AppCompatActivity implements Transac
         }
     }
 
+    @OnClick(R.id.btnTsCompleted)
+    public void complete() {
+        showLoading(true);
+
+        NetworkHandler.getRetrofit().create(Api.class)
+                .completeShipment(detailTransactionHistoryResponse.getHistoryOrderModel().getId())
+                .enqueue(new Callback<BaseResponse>() {
+                    @Override
+                    public void onResponse(Call<BaseResponse> call, Response<BaseResponse> response) {
+                        BaseResponse baseResponse = response.body();
+                        if (baseResponse != null){
+                            if (baseResponse.isSuccess()){
+                                showLoading(false);
+                                Intent intent = new Intent(DetailTransactionOrder.this, ReviewActivity.class);
+                                intent.putExtra("json", new Gson().toJson(detailTransactionHistoryResponse.getTransactionItem()));
+                                startActivity(intent);
+                            }else {
+                                Toast.makeText(DetailTransactionOrder.this, baseResponse.getMessage(), Toast.LENGTH_LONG).show();
+                            }
+                        }else {
+                            Toast.makeText(DetailTransactionOrder.this, "Response Null", Toast.LENGTH_SHORT).show();
+                        }
+                        showLoading(false);
+                    }
+
+                    @Override
+                    public void onFailure(Call<BaseResponse> call, Throwable t) {
+                        t.printStackTrace();
+                        showLoading(false);
+                    }
+                });
+    }
+
     @OnClick(R.id.btnTsPay)
     public void pay() {
         String token = SharedPreferenceManager.get(SharedPreferenceKey.TOKEN, String.class);
@@ -165,35 +199,7 @@ public class DetailTransactionOrder extends AppCompatActivity implements Transac
             MidtransSDK.getInstance().setTransactionRequest(transactionRequest());
             System.out.println("NEW TOKEN = "+ detailTransactionHistoryResponse.getHistoryOrderModel().getPaymentToken());
             MidtransSDK.getInstance().startPaymentUiFlow(DetailTransactionOrder.this, detailTransactionHistoryResponse.getHistoryOrderModel().getPaymentToken());
-//            NetworkHandler.getRetrofit().create(Api.class)
-//                    .postCharge("midtrans", token)
-//                    .enqueue(new Callback<ChargeResponse>() {
-//                        @Override
-//                        public void onResponse(Call<ChargeResponse> call, Response<ChargeResponse> response) {
-//                            ChargeResponse chargeResponse = response.body();
-//                            if (chargeResponse != null) {
-//                                if (!chargeResponse.isSuccess() && chargeResponse.getStatus() == 200) {
-////
-//
-//
-//                                } else {
-//                                    Toast.makeText(DetailTransactionOrder.this, chargeResponse.getMessage(), Toast.LENGTH_SHORT).show();
-//                                }
-//                            } else {
-//                                try {
-//                                    System.out.println(response.errorBody().string() + "\n token" + MidtransSDK.getInstance().getTransaction().getToken());
-//                                    Toast.makeText(DetailTransactionOrder.this, "Please complete transaction first, check in your transaction", Toast.LENGTH_SHORT).show();
-//                                } catch (IOException e) {
-//                                    e.printStackTrace();
-//                                }
-//                            }
-//                        }
-//
-//                        @Override
-//                        public void onFailure(Call<ChargeResponse> call, Throwable t) {
-//                            t.printStackTrace();
-//                        }
-//                    });
+
         }
     }
 
@@ -246,7 +252,11 @@ public class DetailTransactionOrder extends AppCompatActivity implements Transac
                                 if (fromPayment){
                                     DetailTransactionOrder.this.finish();
                                 }else {
-                                    recreate();
+                                    if (getIntent().getIntExtra("transaction_id", -1) != -1) {
+                                        loadData(getIntent().getIntExtra("transaction_id", -1));
+                                    }else {
+                                        Toast.makeText(DetailTransactionOrder.this, "Transaction id null", Toast.LENGTH_SHORT).show();
+                                    }
                                 }
 
                             }else {
@@ -291,11 +301,15 @@ public class DetailTransactionOrder extends AppCompatActivity implements Transac
                             txtTransactionCode.setText("Transaction Code : \n" + detailTransactionHistoryResponse.getHistoryOrderModel().getOrderId());
                             if (!detailTransactionHistoryResponse.getTransactionPayment().isEmpty()){
                                 txtPaymentCode.setText("Payment Code : \n"+ detailTransactionHistoryResponse.getTransactionPayment().get(0).getPaymentCode());
+                                txtPaymentType.setText("Payment Type : \n" + detailTransactionHistoryResponse.getTransactionPayment().get(0).getMethod().toUpperCase());
                             } else {
                                 txtPaymentCode.setText("Payment Code : \n -");
+                                txtPaymentType.setText("Payment Type : \n -");
+
                             }
                             txtDetailOrderDate.setText("Order Date : \n" + detailTransactionHistoryResponse.getHistoryOrderModel().getOrderDate());
                             txtPaymentStatus.setText("Payment Status : \n" +detailTransactionHistoryResponse.getHistoryOrderModel().getPaymentStatus());
+
 
                             if (detailTransactionHistoryResponse.getDeliveredTransactions() != null && detailTransactionHistoryResponse.getDeliveredTransactions().getReceiptNumber() != null){
                                 txtReceiptNumber.setText("Receipt Number : \n" + detailTransactionHistoryResponse.getDeliveredTransactions().getReceiptNumber());
@@ -311,10 +325,17 @@ public class DetailTransactionOrder extends AppCompatActivity implements Transac
                             if (detailTransactionHistoryResponse.getHistoryOrderModel().getStatus().equals("created")){
                                 btnTsPay.setVisibility(View.VISIBLE);
                                 btnCancel.setVisibility(View.VISIBLE);
+                                btnCompleted.setVisibility(View.GONE);
                             }else if (detailTransactionHistoryResponse.getHistoryOrderModel().getStatus().equals("paid")){
+                                btnCompleted.setVisibility(View.GONE);
                                 btnCancel.setVisibility(View.VISIBLE);
-                                btnTsPay.setVisibility(View.INVISIBLE);
+                                btnTsPay.setVisibility(View.GONE);
+                            }else if (detailTransactionHistoryResponse.getHistoryOrderModel().getStatus().equals("delivered")) {
+                                btnCompleted.setVisibility(View.VISIBLE);
+                                btnCancel.setVisibility(View.INVISIBLE);
+                                btnTsPay.setVisibility(View.GONE);
                             }else {
+                                btnCompleted.setVisibility(View.GONE);
                                 btnCancel.setVisibility(View.INVISIBLE);
                                 btnTsPay.setVisibility(View.INVISIBLE);
                             }
@@ -371,12 +392,8 @@ public class DetailTransactionOrder extends AppCompatActivity implements Transac
         }else{
             if(result.getStatus().equalsIgnoreCase((TransactionResult.STATUS_INVALID))){
                 Toast.makeText(this, "Transaction Invalid" + result.getResponse().getTransactionId(), Toast.LENGTH_LONG).show();
-//                cancelPayment(MidtransSDK.getInstance().getTransaction().getToken());
-//                getActivity().finish();
             }else{
                 Toast.makeText(this, "Something Wrong", Toast.LENGTH_LONG).show();
-//                cancelPayment(MidtransSDK.getInstance().getTransaction().getToken());
-//                getActivity().finish();
             }
         }
     }
@@ -389,16 +406,7 @@ public class DetailTransactionOrder extends AppCompatActivity implements Transac
 
         Api api = NetworkHandler.getRetrofit().create(Api.class);
 
-        Call<BaseResponse> callResponse =  api.getSuccessMidtransResponse(response.getOrderId(), response.getStatusCode(), response.getTransactionStatus());;
-
-//        if (this.cartItemResponse != null){
-//            callResponse = api.getSuccessMidtransResponse(
-//                    response.getOrderId(), response.getStatusCode(), response.getTransactionStatus(),
-//                    this.cartItemResponse.getCartItemModels().get(0).getQuantity(), this.cartItemResponse.getCartItemModels().get(0).getNote(),
-//                    this.cartItemResponse.getCartItemModels().get(0).getHotItemModel().getId());
-//        }else {
-//        }
-
+        Call<BaseResponse> callResponse =  api.getSuccessMidtransResponse(response.getOrderId(), response.getStatusCode(), response.getTransactionStatus());
 
         callResponse.enqueue(new Callback<BaseResponse>() {
             @Override

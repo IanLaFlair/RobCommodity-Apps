@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical" android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:background="@color/dark_gray"
+        android:alpha="0.5"/>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="16dp"
+        android:background="@color/white"
+        android:orientation="horizontal">
+        <ImageButton
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:src="@drawable/cio_paypal_logo"
+            android:background="#FFD500"
+            android:padding="12dp"
+            android:layout_marginRight="8dp"
+            android:id="@+id/btnPaypal"
+            />
+
+        <Button
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:drawableStart="@drawable/ic_baseline_credit_card_24"
+            android:text="Credit Card"
+            android:textColor="@color/white"
+            android:fontFamily="@font/ubuntu_bold"
+            android:textSize="16sp"
+            android:background="@color/dark_blue"
+            android:padding="12dp"
+            android:layout_marginLeft="8dp"
+            android:id="@+id/btnMidtrans"
+            />
+    </LinearLayout>
+
+</LinearLayout>

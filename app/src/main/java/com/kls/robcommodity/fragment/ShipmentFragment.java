@@ -1,10 +1,13 @@
 package com.kls.robcommodity.fragment;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
+import android.net.NetworkInfo;
 import android.os.Bundle;
 
+import androidx.annotation.Nullable;
 import androidx.cardview.widget.CardView;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.Observer;
@@ -19,16 +22,20 @@ import butterknife.OnClick;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
+import retrofit2.Retrofit;
+import retrofit2.converter.gson.GsonConverterFactory;
 
 import android.os.CountDownTimer;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.material.bottomsheet.BottomSheetBehavior;
 import com.kls.robcommodity.R;
 import com.kls.robcommodity.activity.HomeActivity;
 import com.kls.robcommodity.adapter.CartListAdapter;
@@ -59,8 +66,18 @@ import com.midtrans.sdk.corekit.models.TransactionResponse;
 import com.midtrans.sdk.corekit.models.snap.TransactionResult;
 import com.midtrans.sdk.uikit.SdkUIFlowBuilder;
 import com.ontbee.legacyforks.cn.pedant.SweetAlert.SweetAlertDialog;
+import com.paypal.android.sdk.payments.PayPalConfiguration;
+import com.paypal.android.sdk.payments.PayPalItem;
+import com.paypal.android.sdk.payments.PayPalPayment;
+import com.paypal.android.sdk.payments.PayPalPaymentDetails;
+import com.paypal.android.sdk.payments.PayPalService;
+import com.paypal.android.sdk.payments.PaymentActivity;
+import com.paypal.android.sdk.payments.PaymentConfirmation;
+
+import org.json.JSONException;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -83,6 +100,10 @@ public class ShipmentFragment extends Fragment implements TransactionFinishedCal
     ScrollView svParent;
     @BindView(R.id.cvParent)
     CardView cvParent;
+    @BindView(R.id.btnPaypal)
+    ImageButton btnPaypal;
+    @BindView(R.id.btnMidtrans)
+    Button btnMidtrans;
 
     private CartListAdapter cartListAdapter;
     private CartListViewModel cartListViewModel;
@@ -93,6 +114,8 @@ public class ShipmentFragment extends Fragment implements TransactionFinishedCal
     private ArrayList<ShippingAddressModel> shippingAddressModels = new ArrayList<>();
     private ArrayList<Integer> selected;
     private NavController navController;
+    private BottomSheetBehavior bs;
+    private String token;
 
     private CartItemResponse cartItemResponse;
 
@@ -114,6 +137,9 @@ public class ShipmentFragment extends Fragment implements TransactionFinishedCal
         ButterKnife.bind(this, view);
         SharedPreferenceManager.getInstance().setSharedPreferences(getActivity().getSharedPreferences(SharedPreferenceManager.NAME, Context.MODE_PRIVATE));
 
+        initBottomSheet(view);
+
+        this.token = SharedPreferenceManager.get(SharedPreferenceKey.TOKEN, String.class);
 
         pDialog = new SweetAlertDialog(getActivity(), SweetAlertDialog.PROGRESS_TYPE);
         pDialog.getProgressHelper().setBarColor(Color.parseColor("#A5DC86"));
@@ -142,6 +168,17 @@ public class ShipmentFragment extends Fragment implements TransactionFinishedCal
         this.rvCheckoutCart.setHasFixedSize(false);
 
         return view;
+    }
+
+    private void initBottomSheet(View view) {
+        View bottom = view.findViewById(R.id.llbottomsheet);
+
+        Intent service = new Intent(getActivity(), PayPalService.class);
+        service.putExtra(PayPalService.EXTRA_PAYPAL_CONFIGURATION, configuration);
+        getActivity().startService(service);
+
+        bs = BottomSheetBehavior.from(bottom);
+        bs.setHideable(true);
     }
 
     private void loadShippingAddress() {
@@ -255,6 +292,11 @@ public class ShipmentFragment extends Fragment implements TransactionFinishedCal
 
     @OnClick(R.id.btn_buy_cart)
     public void pay(){
+        bs.setState(BottomSheetBehavior.STATE_EXPANDED);
+    }
+
+    @OnClick(R.id.btnMidtrans)
+    public void payMidtrans() {
         showLoading(true);
         String token = SharedPreferenceManager.get(SharedPreferenceKey.TOKEN, String.class);
         if (selected.contains(1)){
@@ -375,7 +417,76 @@ public class ShipmentFragment extends Fragment implements TransactionFinishedCal
             showLoading(false);
 
         }
+    }
 
+    private static PayPalConfiguration configuration = new PayPalConfiguration()
+            .environment(PayPalConfiguration.ENVIRONMENT_SANDBOX)
+            .clientId("AVV7oQbGxVfb229hEsoVlE68ycDVAUMawwxDNk2f9xIf5gH0hiCqIeHdyY0fwsXdffgpnbNDN4-COQYf");
+
+    @OnClick(R.id.btnPaypal)
+    public void payPaypal() {
+
+        PayPalPayment payPalPayment = preparePayPalItem();
+        Intent intent = new Intent(getActivity(), PaymentActivity.class);
+
+        intent.putExtra(PayPalService.EXTRA_PAYPAL_CONFIGURATION, configuration);
+        intent.putExtra(PaymentActivity.EXTRA_PAYMENT, payPalPayment);
+
+        startActivityForResult(intent, 1);
+    }
+
+    public PayPalPayment preparePayPalItem() {
+        PayPalPayment payment;
+        if (this.cartItemResponse == null) {
+            PayPalItem[] payPalItems = new PayPalItem[cartListViewModel.getCartItemResponse().getValue().getCartItemModels().size()];
+
+            for (int i = 0; i < this.cartListViewModel.getCartItemResponse().getValue().getCartItemModels().size(); i++) {
+                CartItemModel cartItemModel = this.cartListViewModel.getCartItemResponse().getValue().getCartItemModels().get(i);
+                payPalItems[i] = new PayPalItem(cartItemModel.getHotItemModel().getTitle(),
+                        cartItemModel.getQuantity(), new BigDecimal(cartItemModel.getHotItemModel().getPrice()), "USD", String.valueOf(cartItemModel.getHotItemModel().getId()));
+            }
+
+            PayPalPaymentDetails payPalPaymentDetails = new PayPalPaymentDetails(BigDecimal.ZERO, new BigDecimal(Helper.rupiahToDollar(this.cartListViewModel.getCartItemResponse().getValue().getTotal().doubleValue())), BigDecimal.ZERO);
+            payment = new PayPalPayment(
+                    new BigDecimal(Helper.rupiahToDollar(this.cartListViewModel.getCartItemResponse().getValue().getTotal().doubleValue())),
+                    "USD",
+                    "Description about transaction. This will be displayed to the user.",
+                    PayPalPayment.PAYMENT_INTENT_SALE);
+        }else {
+            HotItemModel hotItemModel = this.cartItemResponse.getCartItemModels().get(0).getHotItemModel();
+            payment = new PayPalPayment(
+                    new BigDecimal(Helper.rupiahToDollar(hotItemModel.getPrice() * this.cartItemResponse.getCartItemModels().get(0).getQuantity())),
+                    "USD",
+                    "Buy Now",
+                    PayPalPayment.PAYMENT_INTENT_SALE);
+        }
+        return payment;
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        if (requestCode == 1){
+            if (resultCode == Activity.RESULT_OK){
+                PaymentConfirmation confirmation = data.getParcelableExtra(PaymentActivity.EXTRA_RESULT_CONFIRMATION);
+                String paypalID = "";
+                try {
+                    System.out.println("RESPONSE" + confirmation.toJSONObject().getJSONObject("response").getString("id"));
+                    paypalID = confirmation.toJSONObject().getJSONObject("response").getString("id");
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+                System.out.println("RESPONSE GET PAYMENT" + confirmation.getPayment().toJSONObject().toString());
+                Toast.makeText(getActivity(), "RESULT OK", Toast.LENGTH_SHORT).show();
+
+                if (!paypalID.equals("")) {
+                    execCompletedPaypal(paypalID);
+                }
+            }else if (resultCode == Activity.RESULT_CANCELED){
+                Toast.makeText(getActivity(), "CANCELLED PAYPAL", Toast.LENGTH_SHORT).show();
+            }else {
+                Toast.makeText(getActivity(), "INVALID PAYMENT", Toast.LENGTH_SHORT).show();
+            }
+        }
     }
 
     private TransactionRequest transactionRequest() {
@@ -391,11 +502,6 @@ public class ShipmentFragment extends Fragment implements TransactionFinishedCal
                 .setClientKey(Constant.CLIENT_KEY)
                 .setTransactionFinishedCallback(this)
                 .enableLog(true)
-//                .setColorTheme(new CustomColorTheme(
-//                        "#DF0000",
-//                        "#D00303",
-//                        "#03DAC5"
-//                ))
                 .buildSDK();
     }
 
@@ -409,26 +515,28 @@ public class ShipmentFragment extends Fragment implements TransactionFinishedCal
             cartItemResponse.getCartItemModels().get(0).setNote(note);
         }else {
             if (!noteList.isEmpty()){
-                for (int i = 0; i < noteList.size(); i++){
-                    Map<String, Object> map = noteList.get(i);
+                boolean isAvailable = false;
+
+                for (int j = 0; j < noteList.size(); j++) {
+                    Map<String, Object> map = noteList.get(j);
                     Integer id = (Integer) map.get("item_id");
-                    if (itemID == id){
-
+                    if (itemID == id) {
                         map.put("note", note);
-                        noteList.set(i, map);
 
-                    }else {
-                        if (i != noteList.size()-1){
-                            continue;
-                        }else {
-                            Map<String, Object> data = new HashMap<>();
-                            data.put("item_id", itemID);
-                            data.put("note", note);
-
-                            noteList.add(data);
-                        }
+                        noteList.set(j, map);
+                        isAvailable = true;
+                        break;
                     }
                 }
+
+                if (!isAvailable){
+                    Map<String, Object> data = new HashMap<>();
+                    data.put("item_id", itemID);
+                    data.put("note", note);
+
+                    noteList.add(data);
+                }
+
             }else {
                 noteList = new ArrayList<>();
                 Map<String, Object> data = new HashMap<>();
@@ -437,6 +545,11 @@ public class ShipmentFragment extends Fragment implements TransactionFinishedCal
 
                 noteList.add(data);
             }
+
+            for (Map<String, Object> map : this.noteList){
+                System.out.println("SIZE "+ this.noteList.size() + "\n" + (Integer) map.get("item_id") + " " + (String) map.get("note"));
+            }
+
         }
 
     }
@@ -517,6 +630,57 @@ public class ShipmentFragment extends Fragment implements TransactionFinishedCal
                         t.printStackTrace();
                     }
                 });
+    }
+
+    private void execCompletedPaypal(String paypalID){
+        showLoading(true);
+
+        Retrofit retrofit = new Retrofit.Builder()
+                .baseUrl(Api.BASE_URL)
+                .addConverterFactory(GsonConverterFactory.create())
+                .build();
+
+        Api api = retrofit.create(Api.class);
+        Call<BaseResponse> call = null;
+
+        if (this.cartItemResponse != null){
+            call = api.successPaypal(
+                    this.token,
+                    this.cartItemResponse.getCartItemModels().get(0).getHotItemModel().getId(),
+                    this.cartItemResponse.getCartItemModels().get(0).getQuantity(),
+                    paypalID
+            );
+        }else {
+            call = api.successPaypal(this.token, paypalID);
+        }
+
+        call.enqueue(new Callback<BaseResponse>() {
+            @Override
+            public void onResponse(Call<BaseResponse> call, Response<BaseResponse> response) {
+                if (response.body() != null){
+                    if (response.body().isSuccess()){
+                        showLoading(false);
+
+                        Intent intent = new Intent(getActivity(), HomeActivity.class);
+                        intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                        startActivity(intent);
+
+                    }else {
+                        Toast.makeText(getActivity(), response.body().getMessage(), Toast.LENGTH_SHORT).show();
+                        showLoading(false);
+                    }
+                }else {
+                    Toast.makeText(getActivity(), "Response Null", Toast.LENGTH_SHORT).show();
+                    showLoading(false);
+                }
+            }
+
+            @Override
+            public void onFailure(Call<BaseResponse> call, Throwable t) {
+                t.printStackTrace();
+                showLoading(false);
+            }
+        });
     }
 
     private void execCompletedPayment(TransactionResult result) {
